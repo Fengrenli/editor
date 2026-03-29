@@ -1,7 +1,8 @@
 'use client'
 
 import { useViewer } from '@pascal-app/viewer'
-import { Moon, Ruler, Sun } from 'lucide-react'
+import { Moon, Sun } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { motion } from 'motion/react'
 import { type ReactNode, useEffect, useState } from 'react'
 import {
@@ -20,12 +21,14 @@ interface IconRailProps {
   className?: string
 }
 
-const panels: { id: PanelId; iconSrc: string; label: string }[] = [
-  { id: 'site', iconSrc: '/icons/level.png', label: 'Site' },
-  { id: 'settings', iconSrc: '/icons/settings.png', label: 'Settings' },
+const panelDefs: { id: PanelId; iconSrc: string }[] = [
+  { id: 'site', iconSrc: '/icons/level.png' },
+  { id: 'settings', iconSrc: '/icons/settings.png' },
 ]
 
 export function IconRail({ activePanel, onPanelChange, appMenuButton, className }: IconRailProps) {
+  const tPanel = useTranslations('shell.panel')
+  const tToolbar = useTranslations('shell.toolbar')
   const theme = useViewer((state) => state.theme)
   const setTheme = useViewer((state) => state.setTheme)
   const unit = useViewer((state) => state.unit)
@@ -49,8 +52,9 @@ export function IconRail({ activePanel, onPanelChange, appMenuButton, className 
       {/* Divider */}
       <div className="mb-1 h-px w-8 bg-border/50" />
 
-      {panels.map((panel) => {
+      {panelDefs.map((panel) => {
         const isActive = activePanel === panel.id
+        const label = tPanel(panel.id)
         return (
           <Tooltip key={panel.id}>
             <TooltipTrigger asChild>
@@ -63,7 +67,7 @@ export function IconRail({ activePanel, onPanelChange, appMenuButton, className 
                 type="button"
               >
                 <img
-                  alt={panel.label}
+                  alt={label}
                   className={cn(
                     'h-6 w-6 object-contain transition-all',
                     !isActive && 'opacity-50 saturate-0',
@@ -72,7 +76,7 @@ export function IconRail({ activePanel, onPanelChange, appMenuButton, className 
                 />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="right">{panel.label}</TooltipContent>
+            <TooltipContent side="right">{label}</TooltipContent>
           </Tooltip>
         )
       })}
@@ -94,7 +98,7 @@ export function IconRail({ activePanel, onPanelChange, appMenuButton, className 
               </div>
             </button>
           </TooltipTrigger>
-          <TooltipContent side="right">Toggle units (metric/imperial)</TooltipContent>
+          <TooltipContent side="right">{tToolbar('toggleUnits')}</TooltipContent>
         </Tooltip>
       )}
 
@@ -117,11 +121,11 @@ export function IconRail({ activePanel, onPanelChange, appMenuButton, className 
               </motion.div>
             </button>
           </TooltipTrigger>
-          <TooltipContent side="right">Toggle theme</TooltipContent>
+          <TooltipContent side="right">{tToolbar('toggleTheme')}</TooltipContent>
         </Tooltip>
       )}
     </div>
   )
 }
 
-export { panels }
+export { panelDefs }

@@ -3,6 +3,7 @@
 import { type AnyNode, type CeilingNode, useScene } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import { Edit, Plus, Trash2 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useCallback, useEffect } from 'react'
 import useEditor from '../../../store/use-editor'
 import { ActionButton } from '../controls/action-button'
@@ -11,6 +12,8 @@ import { SliderControl } from '../controls/slider-control'
 import { PanelWrapper } from './panel-wrapper'
 
 export function CeilingPanel() {
+  const t = useTranslations('propertyPanel')
+  const tStructure = useTranslations('actionMenu.structure')
   const selectedIds = useViewer((s) => s.selection.selectedIds)
   const setSelection = useViewer((s) => s.setSelection)
   const nodes = useScene((s) => s.nodes)
@@ -118,12 +121,12 @@ export function CeilingPanel() {
     <PanelWrapper
       icon="/icons/ceiling.png"
       onClose={handleClose}
-      title={node.name || 'Ceiling'}
+      title={node.name || tStructure('ceiling')}
       width={320}
     >
-      <PanelSection title="Height">
+      <PanelSection title={t('sections.height')}>
         <SliderControl
-          label="Height"
+          label={t('labels.height')}
           max={6}
           min={0}
           onChange={(v) => handleUpdate({ height: v })}
@@ -134,20 +137,23 @@ export function CeilingPanel() {
         />
 
         <div className="mt-2 grid grid-cols-3 gap-1.5 px-1 pb-1">
-          <ActionButton label="Low (2.4m)" onClick={() => handleUpdate({ height: 2.4 })} />
-          <ActionButton label="Standard (2.5m)" onClick={() => handleUpdate({ height: 2.5 })} />
-          <ActionButton label="High (3.0m)" onClick={() => handleUpdate({ height: 3.0 })} />
+          <ActionButton label={t('heightPresetCeiling.low')} onClick={() => handleUpdate({ height: 2.4 })} />
+          <ActionButton
+            label={t('heightPresetCeiling.standard')}
+            onClick={() => handleUpdate({ height: 2.5 })}
+          />
+          <ActionButton label={t('heightPresetCeiling.high')} onClick={() => handleUpdate({ height: 3.0 })} />
         </div>
       </PanelSection>
 
-      <PanelSection title="Info">
+      <PanelSection title={t('sections.info')}>
         <div className="flex items-center justify-between px-2 py-1 text-muted-foreground text-sm">
-          <span>Area</span>
+          <span>{t('labels.area')}</span>
           <span className="font-mono text-white">{area.toFixed(2)} m²</span>
         </div>
       </PanelSection>
 
-      <PanelSection title="Holes">
+      <PanelSection title={t('sections.holes')}>
         {node.holes && node.holes.length > 0 ? (
           <div className="flex flex-col gap-1 pb-2">
             {node.holes.map((hole, index) => {
@@ -167,17 +173,17 @@ export function CeilingPanel() {
                     <p
                       className={`font-medium text-xs ${isEditing ? 'text-primary' : 'text-white'}`}
                     >
-                      Hole {index + 1} {isEditing && '(Editing)'}
+                      {t('holes.holeTitle', { n: index + 1 })} {isEditing && t('holes.editing')}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
-                      {holeArea.toFixed(2)} m² · {hole.length} pts
+                      {holeArea.toFixed(2)} m² · {hole.length} {t('holes.ptsUnit')}
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
                     {isEditing ? (
                       <ActionButton
                         className="h-7 bg-primary text-primary-foreground hover:bg-primary/90"
-                        label="Done"
+                        label={t('holes.done')}
                         onClick={() => setEditingHole(null)}
                       />
                     ) : (
@@ -204,7 +210,7 @@ export function CeilingPanel() {
             })}
           </div>
         ) : (
-          <div className="px-2 py-3 text-center text-muted-foreground text-xs">No holes</div>
+          <div className="px-2 py-3 text-center text-muted-foreground text-xs">{t('holes.noHoles')}</div>
         )}
 
         <div className="px-1 pt-1 pb-1">
@@ -212,7 +218,7 @@ export function CeilingPanel() {
             className="w-full"
             disabled={editingHole?.nodeId === selectedId}
             icon={<Plus className="h-3.5 w-3.5" />}
-            label="Add Hole"
+            label={t('holes.addHole')}
             onClick={handleAddHole}
           />
         </div>

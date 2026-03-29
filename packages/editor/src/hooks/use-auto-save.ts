@@ -13,6 +13,8 @@ interface UseAutoSaveOptions {
   onDirty?: () => void
   onSaveStatusChange?: (status: SaveStatus) => void
   isVersionPreviewMode?: boolean
+  /** When using per-project localStorage keys (no custom onSave) */
+  getStorageProjectId?: () => string | null | undefined
 }
 
 /**
@@ -26,6 +28,7 @@ export function useAutoSave({
   onDirty,
   onSaveStatusChange,
   isVersionPreviewMode = false,
+  getStorageProjectId,
 }: UseAutoSaveOptions): { saveStatus: SaveStatus; isLoadingSceneRef: MutableRefObject<boolean> } {
   const [saveStatus, _setSaveStatus] = useState<SaveStatus>('idle')
 
@@ -35,6 +38,7 @@ export function useAutoSave({
   const pendingSaveRef = useRef(false)
   const executeSaveRef = useRef<(() => Promise<void>) | null>(null)
   const hasDirtyChangesRef = useRef(false)
+  const getStorageProjectIdRef = useRef(getStorageProjectId)
 
   // Keep latest callback/value refs so the stable subscription always uses current values
   const onSaveRef = useRef(onSave)
@@ -54,6 +58,9 @@ export function useAutoSave({
   useEffect(() => {
     isVersionPreviewModeRef.current = isVersionPreviewMode
   }, [isVersionPreviewMode])
+  useEffect(() => {
+    getStorageProjectIdRef.current = getStorageProjectId
+  }, [getStorageProjectId])
 
   const setSaveStatus = useCallback((status: SaveStatus) => {
     _setSaveStatus(status)
@@ -82,7 +89,7 @@ export function useAutoSave({
         if (onSaveRef.current) {
           await onSaveRef.current(sceneGraph)
         } else {
-          saveSceneToLocalStorage(sceneGraph)
+          saveSceneToLocalStorage(sceneGraph, getStorageProjectIdRef.current?.())
         }
         hasDirtyChangesRef.current = false
         setSaveStatus('saved')
@@ -144,7 +151,7 @@ export function useAutoSave({
       if (onSaveRef.current) {
         onSaveRef.current(sceneGraph).catch(() => {})
       } else {
-        saveSceneToLocalStorage(sceneGraph)
+        saveSceneToLocalStorage(sceneGraph, getStorageProjectIdRef.current?.())
       }
       hasDirtyChangesRef.current = false
     }

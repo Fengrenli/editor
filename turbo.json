@@ -29,6 +29,10 @@
       "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
+    },
+    "build:desktop": {
+      "dependsOn": ["editor#build"],
+      "outputs": ["release/**", "dist/**"]
     }
   }
 }

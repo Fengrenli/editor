@@ -1,6 +1,7 @@
 import { type AnyNodeId, useScene, type WallNode } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import useEditor from './../../../../../store/use-editor'
 import { InlineRenameInput } from './inline-rename-input'
@@ -14,6 +15,7 @@ interface WallTreeNodeProps {
 }
 
 export function WallTreeNode({ node, depth, isLast }: WallTreeNodeProps) {
+  const tStructure = useTranslations('actionMenu.structure')
   const [expanded, setExpanded] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const selectedIds = useViewer((state) => state.selection.selectedIds)
@@ -62,7 +64,7 @@ export function WallTreeNode({ node, depth, isLast }: WallTreeNodeProps) {
     setHoveredId(null)
   }
 
-  const defaultName = 'Wall'
+  const defaultName = tStructure('wall')
 
   return (
     <TreeNodeWrapper

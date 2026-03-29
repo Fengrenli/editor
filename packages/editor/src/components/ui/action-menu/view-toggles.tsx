@@ -3,52 +3,41 @@
 import { Icon } from '@iconify/react'
 import { useViewer } from '@pascal-app/viewer'
 import { Diamond } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { cn } from '../../../lib/utils'
 import useEditor from '../../../store/use-editor'
 import { ActionButton } from './action-button'
-
-const levelModeLabels: Record<'stacked' | 'exploded' | 'solo', string> = {
-  stacked: 'Stacked',
-  exploded: 'Exploded',
-  solo: 'Solo',
-}
-
-const levelModeBadgeLabels: Record<'manual' | 'stacked' | 'exploded' | 'solo', string> = {
-  manual: 'Stack',
-  stacked: 'Stack',
-  exploded: 'Exploded',
-  solo: 'Solo',
-}
 
 const levelModeOrder: ('stacked' | 'exploded' | 'solo')[] = ['stacked', 'exploded', 'solo']
 
 type WallMode = 'up' | 'cutaway' | 'down'
 
-const wallModeConfig: Record<
-  WallMode,
-  { icon: React.FC<React.ComponentProps<'img'>>; label: string }
-> = {
-  up: {
-    icon: (props) => (
-      <img alt="Full Height" height={20} src="/icons/room.png" width={20} {...props} />
-    ),
-    label: 'Full Height',
-  },
-  cutaway: {
-    icon: (props) => (
-      <img alt="Cutaway" height={20} src="/icons/wallcut.png" width={20} {...props} />
-    ),
-    label: 'Cutaway',
-  },
-  down: {
-    icon: (props) => <img alt="Low" height={20} src="/icons/walllow.png" width={20} {...props} />,
-    label: 'Low',
-  },
-}
-
 const wallModeOrder: WallMode[] = ['cutaway', 'up', 'down']
 
+const wallModeSrc: Record<WallMode, string> = {
+  up: '/icons/room.png',
+  cutaway: '/icons/wallcut.png',
+  down: '/icons/walllow.png',
+}
+
+const wallModeLabelKey: Record<WallMode, 'fullHeight' | 'cutaway' | 'low'> = {
+  up: 'fullHeight',
+  cutaway: 'cutaway',
+  down: 'low',
+}
+
+const wallModeAltKey: Record<WallMode, 'altFullHeight' | 'altCutaway' | 'altLow'> = {
+  up: 'altFullHeight',
+  cutaway: 'altCutaway',
+  down: 'altLow',
+}
+
 export function ViewToggles() {
+  const tView = useTranslations('actionMenu.view')
+  const tLevel = useTranslations('actionMenu.level')
+  const tWall = useTranslations('actionMenu.wall')
+  const tVis = useTranslations('actionMenu.visibility')
+
   const cameraMode = useViewer((state) => state.cameraMode)
   const setCameraMode = useViewer((state) => state.setCameraMode)
   const levelMode = useViewer((state) => state.levelMode)
@@ -84,6 +73,26 @@ export function ViewToggles() {
     if (nextMode) setWallMode(nextMode)
   }
 
+  const cameraModeLabel =
+    cameraMode === 'perspective' ? tView('perspective') : tView('orthographic')
+
+  const levelLabel =
+    levelMode === 'manual'
+      ? tLevel('manual')
+      : tLevel(levelMode as 'stacked' | 'exploded' | 'solo')
+
+  const levelBadgeText =
+    levelMode === 'manual' || levelMode === 'stacked'
+      ? tLevel('badgeStack')
+      : levelMode === 'exploded'
+        ? tLevel('exploded')
+        : tLevel('solo')
+
+  const wallLabel = tWall(wallModeLabelKey[wallMode])
+  const wallAlt = tWall(wallModeAltKey[wallMode])
+
+  const visState = (visible: boolean) => (visible ? tVis('visible') : tVis('hidden'))
+
   return (
     <div className="flex items-center gap-1">
       {/* Camera Mode */}
@@ -93,7 +102,7 @@ export function ViewToggles() {
             ? 'bg-violet-500/20 text-violet-400'
             : 'hover:text-violet-400',
         )}
-        label={`Camera: ${cameraMode === 'perspective' ? 'Perspective' : 'Orthographic'}`}
+        label={tView('cameraTooltip', { mode: cameraModeLabel })}
         onClick={toggleCameraMode}
         size="icon"
         variant="ghost"
@@ -113,7 +122,7 @@ export function ViewToggles() {
             ? 'text-muted-foreground/80 hover:bg-white/5 hover:text-foreground'
             : 'bg-white/10 text-foreground',
         )}
-        label={`Levels: ${levelMode === 'manual' ? 'Manual' : levelModeLabels[levelMode as keyof typeof levelModeLabels]}`}
+        label={tView('levelsTooltip', { mode: levelLabel })}
         onClick={cycleLevelMode}
         size="icon"
         variant="ghost"
@@ -130,7 +139,7 @@ export function ViewToggles() {
             aria-hidden="true"
             className="pointer-events-none absolute right-1 bottom-1 left-1 rounded border border-border/50 bg-background/70 px-0.5 py-[2px] text-center font-medium font-pixel text-[8px] text-foreground/85 leading-none tracking-[-0.02em] backdrop-blur-sm"
           >
-            {levelModeBadgeLabels[levelMode]}
+            {levelBadgeText}
           </span>
         </span>
       </ActionButton>
@@ -143,15 +152,18 @@ export function ViewToggles() {
             ? 'bg-white/10'
             : 'opacity-60 grayscale hover:bg-white/5 hover:opacity-100 hover:grayscale-0',
         )}
-        label={`Walls: ${wallModeConfig[wallMode].label}`}
+        label={tView('wallsTooltip', { mode: wallLabel })}
         onClick={cycleWallMode}
         size="icon"
         variant="ghost"
       >
-        {(() => {
-          const Icon = wallModeConfig[wallMode].icon
-          return <Icon className="h-[28px] w-[28px]" />
-        })()}
+        <img
+          alt={wallAlt}
+          className="h-[28px] w-[28px]"
+          height={28}
+          src={wallModeSrc[wallMode]}
+          width={28}
+        />
       </ActionButton>
 
       {/* Show Scans */}
@@ -162,12 +174,12 @@ export function ViewToggles() {
             ? 'bg-white/10'
             : 'opacity-60 grayscale hover:bg-white/5 hover:opacity-100 hover:grayscale-0',
         )}
-        label={`Scans: ${showScans ? 'Visible' : 'Hidden'}`}
+        label={tView('scansTooltip', { state: visState(showScans) })}
         onClick={() => setShowScans(!showScans)}
         size="icon"
         variant="ghost"
       >
-        <img alt="Scans" className="h-[28px] w-[28px] object-contain" src="/icons/mesh.png" />
+        <img alt={tView('scansAlt')} className="h-[28px] w-[28px] object-contain" src="/icons/mesh.png" />
       </ActionButton>
 
       {/* Show Guides */}
@@ -178,24 +190,28 @@ export function ViewToggles() {
             ? 'bg-white/10'
             : 'opacity-60 grayscale hover:bg-white/5 hover:opacity-100 hover:grayscale-0',
         )}
-        label={`Guides: ${showGuides ? 'Visible' : 'Hidden'}`}
+        label={tView('guidesTooltip', { state: visState(showGuides) })}
         onClick={() => setShowGuides(!showGuides)}
         size="icon"
         variant="ghost"
       >
-        <img alt="Guides" className="h-[28px] w-[28px] object-contain" src="/icons/floorplan.png" />
+        <img
+          alt={tView('guidesAlt')}
+          className="h-[28px] w-[28px] object-contain"
+          src="/icons/floorplan.png"
+        />
       </ActionButton>
 
       <ActionButton
         className={cn('overflow-visible p-0', isFloorplanOpen ? 'bg-white/10' : 'hover:bg-white/5')}
-        label={`2D floor plan: ${isFloorplanOpen ? 'Visible' : 'Hidden'}`}
+        label={tView('floorplanTooltip', { state: visState(isFloorplanOpen) })}
         onClick={toggleFloorplanOpen}
         size="icon"
         variant="ghost"
       >
         <span className="relative flex h-full w-full items-center justify-center pb-1">
           <img
-            alt="2D floor plan"
+            alt={tView('floorplanAlt')}
             className={cn(
               'h-[28px] w-[28px] object-contain transition-[filter,opacity] duration-200',
               isFloorplanOpen ? 'opacity-100 grayscale-0' : 'opacity-60 grayscale',
@@ -206,7 +222,7 @@ export function ViewToggles() {
             aria-hidden="true"
             className="pointer-events-none absolute -top-1 -right-1 z-10 rounded-full border border-background/80 bg-emerald-600 px-1.5 py-0.5 font-semibold text-[7px] text-white leading-none shadow-[0_4px_10px_rgba(5,150,105,0.24)]"
           >
-            New
+            {tView('floorplanNewBadge')}
           </span>
           <span
             aria-hidden="true"

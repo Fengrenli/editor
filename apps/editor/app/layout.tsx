@@ -3,6 +3,8 @@ import { GeistPixelSquare } from 'geist/font/pixel'
 import { Barlow } from 'next/font/google'
 import localFont from 'next/font/local'
 import Script from 'next/script'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale, getMessages } from 'next-intl/server'
 import './globals.css'
 
 const geistSans = localFont({
@@ -21,15 +23,18 @@ const barlow = Barlow({
   display: 'swap',
 })
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const locale = await getLocale()
+  const messages = await getMessages()
+
   return (
     <html
       className={`${geistSans.variable} ${geistMono.variable} ${GeistPixelSquare.variable} ${barlow.variable}`}
-      lang="en"
+      lang={locale}
     >
       <head>
         {process.env.NODE_ENV === 'development' && (
@@ -41,7 +46,9 @@ export default function RootLayout({
         )}
       </head>
       <body className="font-sans">
-        {children}
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+        </NextIntlClientProvider>
         {process.env.NODE_ENV === 'development' && <Agentation />}
       </body>
     </html>

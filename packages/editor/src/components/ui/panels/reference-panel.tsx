@@ -2,6 +2,7 @@
 
 import { type AnyNode, type GuideNode, type ScanNode, useScene } from '@pascal-app/core'
 import { Box, Image as ImageIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useCallback } from 'react'
 import useEditor from '../../../store/use-editor'
 import { ActionButton, ActionGroup } from '../controls/action-button'
@@ -13,6 +14,8 @@ import { PanelWrapper } from './panel-wrapper'
 type ReferenceNode = ScanNode | GuideNode
 
 export function ReferencePanel() {
+  const t = useTranslations('propertyPanel')
+  const tSite = useTranslations('sitePanel')
   const selectedReferenceId = useEditor((s) => s.selectedReferenceId)
   const setSelectedReferenceId = useEditor((s) => s.setSelectedReferenceId)
   const nodes = useScene((s) => s.nodes)
@@ -42,14 +45,14 @@ export function ReferencePanel() {
     <PanelWrapper
       icon={isScan ? undefined : undefined}
       onClose={handleClose}
-      title={node.name || (isScan ? '3D Scan' : 'Guide Image')}
+      title={node.name || (isScan ? tSite('defaultNameScan') : tSite('defaultNameGuide'))}
       width={300}
     >
-      <PanelSection title="Position">
+      <PanelSection title={t('sections.position')}>
         <SliderControl
           label={
             <>
-              X<sub className="ml-[1px] text-[11px] opacity-70">pos</sub>
+              X<sub className="ml-[1px] text-[11px] opacity-70">{t('reference.posSub')}</sub>
             </>
           }
           max={50}
@@ -67,7 +70,7 @@ export function ReferencePanel() {
         <SliderControl
           label={
             <>
-              Y<sub className="ml-[1px] text-[11px] opacity-70">pos</sub>
+              Y<sub className="ml-[1px] text-[11px] opacity-70">{t('reference.posSub')}</sub>
             </>
           }
           max={50}
@@ -85,7 +88,7 @@ export function ReferencePanel() {
         <SliderControl
           label={
             <>
-              Z<sub className="ml-[1px] text-[11px] opacity-70">pos</sub>
+              Z<sub className="ml-[1px] text-[11px] opacity-70">{t('reference.posSub')}</sub>
             </>
           }
           max={50}
@@ -102,11 +105,11 @@ export function ReferencePanel() {
         />
       </PanelSection>
 
-      <PanelSection title="Rotation">
+      <PanelSection title={t('sections.rotation')}>
         <SliderControl
           label={
             <>
-              Y<sub className="ml-[1px] text-[11px] opacity-70">rot</sub>
+              Y<sub className="ml-[1px] text-[11px] opacity-70">{t('reference.rotSub')}</sub>
             </>
           }
           max={180}
@@ -124,7 +127,7 @@ export function ReferencePanel() {
         />
         <div className="flex gap-1.5 px-1 pt-2 pb-1">
           <ActionButton
-            label="-45°"
+            label={t('roofSegment.rotateNeg45')}
             onClick={() =>
               handleUpdate({
                 rotation: [node.rotation[0], node.rotation[1] - Math.PI / 4, node.rotation[2]],
@@ -132,7 +135,7 @@ export function ReferencePanel() {
             }
           />
           <ActionButton
-            label="+45°"
+            label={t('roofSegment.rotatePos45')}
             onClick={() =>
               handleUpdate({
                 rotation: [node.rotation[0], node.rotation[1] + Math.PI / 4, node.rotation[2]],
@@ -142,11 +145,11 @@ export function ReferencePanel() {
         </div>
       </PanelSection>
 
-      <PanelSection title="Scale & Opacity">
+      <PanelSection title={t('sections.scaleAndOpacity')}>
         <SliderControl
           label={
             <>
-              XYZ<sub className="ml-[1px] text-[11px] opacity-70">scale</sub>
+              XYZ<sub className="ml-[1px] text-[11px] opacity-70">{t('item.scaleSub')}</sub>
             </>
           }
           max={10}
@@ -162,7 +165,7 @@ export function ReferencePanel() {
         />
 
         <SliderControl
-          label="Opacity"
+          label={t('labels.opacity')}
           max={100}
           min={0}
           onChange={(v) => handleUpdate({ opacity: v })}

@@ -5,7 +5,8 @@ import { useScene } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import { Command } from 'cmdk'
 import { ChevronRight, Search } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { useEffect, useMemo, useState } from 'react'
 import { create } from 'zustand'
 import { useShallow } from 'zustand/shallow'
 import { Dialog, DialogContent, DialogTitle } from './../../../components/ui/primitives/dialog'
@@ -149,21 +150,14 @@ function OptionItem({
 }
 
 // ---------------------------------------------------------------------------
-// Sub-page label map
-// ---------------------------------------------------------------------------
-const PAGE_LABEL: Record<string, string> = {
-  'wall-mode': 'Wall Mode',
-  'level-mode': 'Level Mode',
-  'rename-level': 'Rename Level',
-  'goto-level': 'Go to Level',
-  'camera-view': 'Camera Snapshot',
-  'camera-scope': '',
-}
-
-// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 export function CommandPalette() {
+  const t = useTranslations('commandPalette')
+  const tSite = useTranslations('sitePanel')
+  const tLevelLabels = useTranslations('actionMenu.level')
+  const tWallVm = useTranslations('commandPalette.viewerWallMode')
+
   const {
     open,
     setOpen,
@@ -236,16 +230,32 @@ export function CommandPalette() {
     setOpen(false)
   }
 
-  const wallModeLabel: Record<'cutaway' | 'up' | 'down', string> = {
-    cutaway: 'Cutaway',
-    up: 'Up',
-    down: 'Down',
-  }
-  const levelModeLabel: Record<'manual' | 'stacked' | 'exploded' | 'solo', string> = {
-    manual: 'Manual',
-    stacked: 'Stacked',
-    exploded: 'Exploded',
-    solo: 'Solo',
+  const wallModeLabel: Record<'cutaway' | 'up' | 'down', string> = useMemo(
+    () => ({
+      cutaway: tWallVm('cutaway'),
+      up: tWallVm('up'),
+      down: tWallVm('down'),
+    }),
+    [tWallVm],
+  )
+  const levelModeLabel = useMemo(
+    () =>
+      ({
+        manual: tLevelLabels('manual'),
+        stacked: tLevelLabels('stacked'),
+        exploded: tLevelLabels('exploded'),
+        solo: tLevelLabels('solo'),
+      }) satisfies Record<'manual' | 'stacked' | 'exploded' | 'solo', string>,
+    [tLevelLabels],
+  )
+
+  const pageBreadCrumbLabel = (p: string) => {
+    if (p === 'wall-mode') return t('page.wallMode')
+    if (p === 'level-mode') return t('page.levelMode')
+    if (p === 'rename-level') return t('page.renameLevel')
+    if (p === 'goto-level') return t('page.gotoLevel')
+    if (p === 'camera-view') return t('page.cameraView')
+    return views.get(p)?.label ?? p
   }
 
   // Camera snapshot helpers (used by sub-pages registered via EditorCommands)
@@ -308,7 +318,7 @@ export function CommandPalette() {
   return (
     <Dialog onOpenChange={setOpen} open={open}>
       <DialogContent className="max-w-lg gap-0 overflow-hidden p-0" showCloseButton={false}>
-        <DialogTitle className="sr-only">Command Palette</DialogTitle>
+        <DialogTitle className="sr-only">{t('dialogTitle')}</DialogTitle>
 
         {modeView && <modeView.Component onBack={onBack} onClose={onClose} />}
 
@@ -333,8 +343,8 @@ export function CommandPalette() {
                   type="button"
                 >
                   {page === 'camera-scope'
-                    ? (cameraScope?.label ?? 'Snapshot')
-                    : (PAGE_LABEL[page] ?? views.get(page)?.label ?? page)}
+                    ? (cameraScope?.label ?? t('snapshotBreadcrumb'))
+                    : pageBreadCrumbLabel(page)}
                 </button>
               )}
               <Command.Input
@@ -343,10 +353,10 @@ export function CommandPalette() {
                 onValueChange={setInputValue}
                 placeholder={
                   page === 'rename-level'
-                    ? 'Type a new name…'
+                    ? t('placeholderRename')
                     : page
-                      ? 'Filter options…'
-                      : 'Search actions…'
+                      ? t('placeholderFilter')
+                      : t('placeholderSearch')
                 }
                 value={inputValue}
               />
@@ -354,7 +364,7 @@ export function CommandPalette() {
 
             <Command.List className="max-h-100 overflow-y-auto p-1.5">
               <Command.Empty className="py-8 text-center text-muted-foreground text-sm">
-                No commands found.
+                {t('noCommands')}
               </Command.Empty>
 
               {/* ── Registered page view (e.g. 'ai') ─────────────────────── */}
@@ -387,7 +397,7 @@ export function CommandPalette() {
 
               {/* ── Wall Mode sub-page ────────────────────────────────────── */}
               {page === 'wall-mode' && (
-                <Command.Group heading="Wall Mode">
+                <Command.Group heading={t('page.wallMode')}>
                   {(['cutaway', 'up', 'down'] as const).map((mode) => (
                     <OptionItem
                       isActive={wallMode === mode}
@@ -401,7 +411,7 @@ export function CommandPalette() {
 
               {/* ── Level Mode sub-page ───────────────────────────────────── */}
               {page === 'level-mode' && (
-                <Command.Group heading="Level Mode">
+                <Command.Group heading={t('page.levelMode')}>
                   {(['stacked', 'exploded', 'solo'] as const).map((mode) => (
                     <OptionItem
                       isActive={levelMode === mode}
@@ -415,12 +425,12 @@ export function CommandPalette() {
 
               {/* ── Go to Level sub-page ──────────────────────────────────── */}
               {page === 'goto-level' && (
-                <Command.Group heading="Go to Level">
+                <Command.Group heading={t('page.gotoLevel')}>
                   {allLevels.map((level) => (
                     <OptionItem
                       isActive={level.id === activeLevelId}
                       key={level.id}
-                      label={level.name ?? `Level ${level.level}`}
+                      label={level.name ?? t('levelFallback', { level: level.level })}
                       onSelect={() =>
                         run(() => useViewer.getState().setSelection({ levelId: level.id }))
                       }
@@ -431,7 +441,7 @@ export function CommandPalette() {
 
               {/* ── Rename Level sub-page ─────────────────────────────────── */}
               {page === 'rename-level' && (
-                <Command.Group heading="Rename Level">
+                <Command.Group heading={t('page.renameLevel')}>
                   <Command.Item
                     className="flex cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 text-foreground text-sm transition-colors data-[disabled=true]:cursor-not-allowed data-[selected=true]:bg-accent data-[disabled=true]:opacity-40"
                     disabled={!inputValue.trim()}
@@ -456,11 +466,9 @@ export function CommandPalette() {
                     </span>
                     <span className="flex-1 truncate">
                       {inputValue.trim() ? (
-                        <>
-                          Rename to <span className="font-medium">"{inputValue.trim()}"</span>
-                        </>
+                        <span className="font-medium">{t('renameTo', { name: inputValue.trim() })}</span>
                       ) : (
-                        <span className="text-muted-foreground">Type a new name above…</span>
+                        <span className="text-muted-foreground">{t('renameHint')}</span>
                       )}
                     </span>
                   </Command.Item>
@@ -469,7 +477,7 @@ export function CommandPalette() {
 
               {/* ── Camera Snapshot: scope picker ─────────────────────────── */}
               {page === 'camera-view' && (
-                <Command.Group heading="Camera Snapshot — Select Scope">
+                <Command.Group heading={t('cameraSnapshotSelectScope')}>
                   <OptionItem
                     icon={
                       <svg
@@ -483,12 +491,12 @@ export function CommandPalette() {
                         <path d="M3 9h18M9 21V9" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     }
-                    label="Site"
+                    label={tSite('defaultSite')}
                     onSelect={() => {
                       const { rootNodeIds } = useScene.getState()
                       const siteId = rootNodeIds[0]
                       if (siteId) {
-                        setCameraScope({ nodeId: siteId, label: 'Site' })
+                        setCameraScope({ nodeId: siteId, label: tSite('defaultSite') })
                         navigateTo('camera-scope')
                       }
                     }}
@@ -514,13 +522,13 @@ export function CommandPalette() {
                         />
                       </svg>
                     }
-                    label="Building"
+                    label={tSite('defaultBuilding')}
                     onSelect={() => {
                       const building = Object.values(useScene.getState().nodes).find(
                         (n) => n.type === 'building',
                       )
                       if (building) {
-                        setCameraScope({ nodeId: building.id, label: 'Building' })
+                        setCameraScope({ nodeId: building.id, label: tSite('defaultBuilding') })
                         navigateTo('camera-scope')
                       }
                     }}
@@ -547,10 +555,10 @@ export function CommandPalette() {
                         />
                       </svg>
                     }
-                    label="Level"
+                    label={tSite('altLevel')}
                     onSelect={() => {
                       if (activeLevelId) {
-                        setCameraScope({ nodeId: activeLevelId, label: 'Level' })
+                        setCameraScope({ nodeId: activeLevelId, label: tSite('altLevel') })
                         navigateTo('camera-scope')
                       }
                     }}
@@ -568,11 +576,11 @@ export function CommandPalette() {
                         <path d="M5 3l14 9-14 9V3z" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     }
-                    label="Selection"
+                    label={t('scopeSelection')}
                     onSelect={() => {
                       const firstId = useViewer.getState().selection.selectedIds[0]
                       if (firstId) {
-                        setCameraScope({ nodeId: firstId, label: 'Selection' })
+                        setCameraScope({ nodeId: firstId, label: t('scopeSelection') })
                         navigateTo('camera-scope')
                       }
                     }}
@@ -582,7 +590,7 @@ export function CommandPalette() {
 
               {/* ── Camera Snapshot: actions for selected scope ───────────── */}
               {page === 'camera-scope' && cameraScope && (
-                <Command.Group heading={`${cameraScope.label} Snapshot`}>
+                <Command.Group heading={t('snapshotGroupTitle', { scope: cameraScope.label })}>
                   <OptionItem
                     icon={
                       <svg
@@ -606,7 +614,7 @@ export function CommandPalette() {
                         />
                       </svg>
                     }
-                    label={hasScopeSnapshot ? 'Update Snapshot' : 'Take Snapshot'}
+                    label={hasScopeSnapshot ? tSite('updateSnapshot') : tSite('takeSnapshot')}
                     onSelect={takeSnapshot}
                   />
                   {hasScopeSnapshot && (
@@ -633,7 +641,7 @@ export function CommandPalette() {
                           />
                         </svg>
                       }
-                      label="View Snapshot"
+                      label={tSite('viewSnapshot')}
                       onSelect={viewSnapshot}
                     />
                   )}
@@ -661,7 +669,7 @@ export function CommandPalette() {
                           <path d="M9 6V4h6v2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       }
-                      label="Clear Snapshot"
+                      label={tSite('clearSnapshot')}
                       onSelect={clearSnapshot}
                     />
                   )}
@@ -672,18 +680,18 @@ export function CommandPalette() {
             {/* Footer hint */}
             <div className="flex items-center justify-between border-border/50 border-t px-3 py-2">
               <span className="text-[11px] text-muted-foreground">
-                <Shortcut keys={['↑', '↓']} /> navigate
+                <Shortcut keys={['↑', '↓']} /> {t('footerNavigate')}
               </span>
               <span className="text-[11px] text-muted-foreground">
-                <Shortcut keys={['↵']} /> select
+                <Shortcut keys={['↵']} /> {t('footerSelect')}
               </span>
               {page ? (
                 <span className="text-[11px] text-muted-foreground">
-                  <Shortcut keys={['⌫']} /> back
+                  <Shortcut keys={['⌫']} /> {t('footerBack')}
                 </span>
               ) : (
                 <span className="text-[11px] text-muted-foreground">
-                  <Shortcut keys={['Esc']} /> close
+                  <Shortcut keys={['Esc']} /> {t('footerClose')}
                 </span>
               )}
             </div>

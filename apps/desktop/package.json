@@ -1,0 +1,67 @@
+{
+  "name": "desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Windows desktop shell for Rdesign (Electron + Next standalone)",
+  "author": "Rdesign",
+  "main": "main.cjs",
+  "scripts": {
+    "prepare-icon": "node scripts/prepare-icon.cjs",
+    "prepare-next": "node scripts/prepare-next.cjs",
+    "start": "electron .",
+    "start:dev": "cross-env REDITOR_DESKTOP_DEV=1 electron .",
+    "build:desktop": "node scripts/ensure-app-builder.cjs && node scripts/prepare-icon.cjs && node scripts/prepare-next.cjs && electron-builder --win --config electron-builder.config.cjs",
+    "build:desktop:dir": "node scripts/ensure-app-builder.cjs && node scripts/prepare-icon.cjs && node scripts/prepare-next.cjs && electron-builder --win dir --x64 --config electron-builder.config.cjs",
+    "build:desktop:from-root": "cd ../.. && npx turbo run build:desktop --log-order stream",
+    "build:desktop:local-electron": "node scripts/ensure-app-builder.cjs && node scripts/ensure-local-electron-env.cjs && node scripts/prepare-icon.cjs && node scripts/prepare-next.cjs && electron-builder --win --config electron-builder.config.cjs"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "electron": "34.5.8",
+    "electron-builder": "^25.1.8",
+    "sharp": "^0.34.5"
+  },
+  "build": {
+    "appId": "app.rdesign.desktop",
+    "productName": "Rdesign",
+    "copyright": "Copyright © Rdesign",
+    "directories": {
+      "output": "release",
+      "buildResources": "installer"
+    },
+    "files": [
+      "main.cjs",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "dist/next",
+        "to": "next",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-Portable.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "differentialPackage": false
+    }
+  }
+}

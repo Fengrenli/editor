@@ -1,6 +1,7 @@
 import { type AnyNodeId, type CeilingNode, useScene } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import useEditor from './../../../../../store/use-editor'
 import { InlineRenameInput } from './inline-rename-input'
@@ -14,6 +15,7 @@ interface CeilingTreeNodeProps {
 }
 
 export function CeilingTreeNode({ node, depth, isLast }: CeilingTreeNodeProps) {
+  const t = useTranslations('sitePanel')
   const [expanded, setExpanded] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const selectedIds = useViewer((state) => state.selection.selectedIds)
@@ -64,7 +66,7 @@ export function CeilingTreeNode({ node, depth, isLast }: CeilingTreeNodeProps) {
 
   // Calculate approximate area from polygon
   const area = calculatePolygonArea(node.polygon).toFixed(1)
-  const defaultName = `Ceiling (${area}m²)`
+  const defaultName = t('ceilingWithArea', { area })
 
   return (
     <TreeNodeWrapper

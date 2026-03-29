@@ -14,6 +14,7 @@ import {
   Users,
   X,
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useState } from 'react'
 import type { PresetsTab } from '../../../../contexts/presets-context'
 import { cn } from '../../../../lib/utils'
@@ -65,6 +66,7 @@ export function PresetsPopover({
   isAuthenticated = false,
   tabs = ['community', 'mine'],
 }: PresetsPopoverProps) {
+  const t = useTranslations('propertyPanel.presets')
   const defaultTab = tabs[0] ?? 'mine'
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<PresetsTab>(defaultTab)
@@ -162,7 +164,7 @@ export function PresetsPopover({
           <div className="flex items-center gap-1.5">
             <BookMarked className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="font-semibold text-foreground text-xs tracking-tight">
-              {type === 'door' ? 'Door' : 'Window'} Presets
+              {type === 'door' ? t('titleDoor') : t('titleWindow')}
             </span>
           </div>
           {isAuthenticated && (
@@ -175,7 +177,7 @@ export function PresetsPopover({
               type="button"
             >
               <Plus className="h-3 w-3" />
-              Save new
+              {t('saveNew')}
             </button>
           )}
         </div>
@@ -193,7 +195,7 @@ export function PresetsPopover({
                   setSaveName('')
                 }
               }}
-              placeholder="Preset name…"
+              placeholder={t('presetNamePlaceholder')}
               value={saveName}
             />
             <button
@@ -222,7 +224,7 @@ export function PresetsPopover({
             {tabs.includes('community') && (
               <TabButton active={tab === 'community'} onClick={() => setTab('community')}>
                 <Users className="h-3 w-3" />
-                Community
+                {t('tabCommunity')}
               </TabButton>
             )}
             {tabs.includes('mine') && (
@@ -234,7 +236,7 @@ export function PresetsPopover({
                 }}
               >
                 <BookMarked className="h-3 w-3" />
-                My presets
+                {t('tabMine')}
               </TabButton>
             )}
           </div>
@@ -315,15 +317,16 @@ function TabButton({
 }
 
 function EmptyState({ tab, isAuthenticated }: { tab: PresetsTab; isAuthenticated: boolean }) {
+  const t = useTranslations('propertyPanel.presets')
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-4 py-8 text-center">
       <BookMarked className="h-6 w-6 text-muted-foreground/40" />
       <p className="text-muted-foreground text-xs">
         {tab === 'community'
-          ? 'No community presets yet.'
+          ? t('emptyCommunity')
           : isAuthenticated
-            ? 'No presets saved yet. Use "Save new" to save the current configuration.'
-            : 'Sign in to save and view your presets.'}
+            ? t('emptyMine')
+            : t('emptySignIn')}
       </p>
     </div>
   )
@@ -368,6 +371,8 @@ function PresetRow({
   onDeleteConfirm,
   onDeleteCancel,
 }: PresetRowProps) {
+  const t = useTranslations('propertyPanel.presets')
+  const tAct = useTranslations('propertyPanel.actions')
   const isRenaming = renamingId === preset.id
   const isDeleting = deletingId === preset.id
   const justOverwritten = overwrittenId === preset.id
@@ -375,21 +380,21 @@ function PresetRow({
   if (isDeleting) {
     return (
       <li className="flex items-center justify-between gap-2 bg-red-500/10 px-3 py-2.5">
-        <span className="truncate text-foreground/80 text-xs">Delete "{preset.name}"?</span>
+        <span className="truncate text-foreground/80 text-xs">{t('deleteConfirm', { name: preset.name })}</span>
         <div className="flex shrink-0 items-center gap-1">
           <button
             className="rounded-md bg-red-500/20 px-2 py-0.5 font-medium text-[11px] text-red-400 transition-colors hover:bg-red-500/30"
             onClick={onDeleteConfirm}
             type="button"
           >
-            Delete
+            {tAct('delete')}
           </button>
           <button
             className="rounded-md px-2 py-0.5 font-medium text-[11px] text-muted-foreground transition-colors hover:bg-white/10"
             onClick={onDeleteCancel}
             type="button"
           >
-            Cancel
+            {t('cancel')}
           </button>
         </div>
       </li>
@@ -478,30 +483,30 @@ function PresetRow({
           <DropdownMenuContent align="start" className="min-w-44" side="left">
             <DropdownMenuItem onClick={onOverwrite}>
               <Save className="h-3.5 w-3.5" />
-              Update with current
+              {t('updateWithCurrent')}
             </DropdownMenuItem>
             {showCommunityToggle && (
               <DropdownMenuItem onClick={onToggleCommunity}>
                 {preset.is_community ? (
                   <>
                     <GlobeLock className="h-3.5 w-3.5" />
-                    Remove from community
+                    {t('removeFromCommunity')}
                   </>
                 ) : (
                   <>
                     <Globe className="h-3.5 w-3.5" />
-                    Share with community
+                    {t('shareWithCommunity')}
                   </>
                 )}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={onStartRename}>
               <Pencil className="h-3.5 w-3.5" />
-              Rename
+              {t('rename')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onDeleteRequest} variant="destructive">
               <Trash2 className="h-3.5 w-3.5" />
-              Delete
+              {tAct('delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

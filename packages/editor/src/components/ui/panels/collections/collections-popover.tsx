@@ -13,6 +13,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { ColorDot } from '../../../../components/ui/primitives/color-dot'
 import {
@@ -35,6 +36,8 @@ interface CollectionsPopoverProps {
 }
 
 export function CollectionsPopover({ nodeId, collectionIds, children }: CollectionsPopoverProps) {
+  const t = useTranslations('propertyPanel.collections')
+  const tAct = useTranslations('propertyPanel.actions')
   const collections = useScene((s) => s.collections)
   const nodes = useScene((s) => s.nodes)
   const createCollection = useScene((s) => s.createCollection)
@@ -100,9 +103,7 @@ export function CollectionsPopover({ nodeId, collectionIds, children }: Collecti
         <div className="flex items-center justify-between border-border/50 border-b px-3 py-2.5">
           <div className="flex items-center gap-1.5">
             <Layers className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="font-semibold text-foreground text-xs tracking-tight">
-              Collections
-            </span>
+            <span className="font-semibold text-foreground text-xs tracking-tight">{t('title')}</span>
           </div>
           <button
             className="flex items-center gap-1 rounded-md px-2 py-1 font-medium text-[11px] text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
@@ -113,7 +114,7 @@ export function CollectionsPopover({ nodeId, collectionIds, children }: Collecti
             type="button"
           >
             <Plus className="h-3 w-3" />
-            New
+            {t('new')}
           </button>
         </div>
 
@@ -131,7 +132,7 @@ export function CollectionsPopover({ nodeId, collectionIds, children }: Collecti
                   setCreateName('')
                 }
               }}
-              placeholder="Collection name…"
+              placeholder={t('namePlaceholder')}
               value={createName}
             />
             <button
@@ -160,9 +161,7 @@ export function CollectionsPopover({ nodeId, collectionIds, children }: Collecti
           {allCollections.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 px-4 py-8 text-center">
               <Layers className="h-6 w-6 text-muted-foreground/40" />
-              <p className="text-muted-foreground text-xs">
-                No collections yet. Create one to group items together.
-              </p>
+              <p className="text-muted-foreground text-xs">{t('empty')}</p>
             </div>
           ) : (
             <ul className="divide-y divide-border/30">
@@ -179,7 +178,7 @@ export function CollectionsPopover({ nodeId, collectionIds, children }: Collecti
                       key={collection.id}
                     >
                       <span className="truncate text-foreground/80 text-xs">
-                        Delete "{collection.name}"?
+                        {t('deleteConfirm', { name: collection.name })}
                       </span>
                       <div className="flex shrink-0 items-center gap-1">
                         <button
@@ -190,14 +189,14 @@ export function CollectionsPopover({ nodeId, collectionIds, children }: Collecti
                           }}
                           type="button"
                         >
-                          Delete
+                          {tAct('delete')}
                         </button>
                         <button
                           className="rounded-md px-2 py-0.5 font-medium text-[11px] text-muted-foreground transition-colors hover:bg-white/10"
                           onClick={() => setDeletingId(null)}
                           type="button"
                         >
-                          Cancel
+                          {t('cancel')}
                         </button>
                       </div>
                     </li>
@@ -308,14 +307,14 @@ export function CollectionsPopover({ nodeId, collectionIds, children }: Collecti
                             }}
                           >
                             <Pencil className="h-3.5 w-3.5" />
-                            Rename
+                            {t('rename')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => setDeletingId(collection.id)}
                             variant="destructive"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
-                            Delete
+                            {tAct('delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

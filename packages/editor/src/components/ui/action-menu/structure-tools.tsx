@@ -1,36 +1,33 @@
 'use client'
 
 import NextImage from 'next/image'
+import { useTranslations } from 'next-intl'
 import { useContextualTools } from '../../../hooks/use-contextual-tools'
 
 import { cn } from '../../../lib/utils'
-import useEditor, {
-  type CatalogCategory,
-  type StructureTool,
-  type Tool,
-} from '../../../store/use-editor'
+import useEditor, { type CatalogCategory, type StructureTool } from '../../../store/use-editor'
 import { ActionButton } from './action-button'
 
 export type ToolConfig = {
   id: StructureTool
   iconSrc: string
-  label: string
   catalogCategory?: CatalogCategory
 }
 
 export const tools: ToolConfig[] = [
-  { id: 'wall', iconSrc: '/icons/wall.png', label: 'Wall' },
-  // { id: 'room', iconSrc: '/icons/room.png', label: 'Room' },
-  // { id: 'custom-room', iconSrc: '/icons/custom-room.png', label: 'Custom Room' },
-  { id: 'slab', iconSrc: '/icons/floor.png', label: 'Slab' },
-  { id: 'ceiling', iconSrc: '/icons/ceiling.png', label: 'Ceiling' },
-  { id: 'roof', iconSrc: '/icons/roof.png', label: 'Gable Roof' },
-  { id: 'door', iconSrc: '/icons/door.png', label: 'Door' },
-  { id: 'window', iconSrc: '/icons/window.png', label: 'Window' },
-  { id: 'zone', iconSrc: '/icons/zone.png', label: 'Zone' },
+  { id: 'wall', iconSrc: '/icons/wall.png' },
+  // { id: 'room', iconSrc: '/icons/room.png' },
+  // { id: 'custom-room', iconSrc: '/icons/custom-room.png' },
+  { id: 'slab', iconSrc: '/icons/floor.png' },
+  { id: 'ceiling', iconSrc: '/icons/ceiling.png' },
+  { id: 'roof', iconSrc: '/icons/roof.png' },
+  { id: 'door', iconSrc: '/icons/door.png' },
+  { id: 'window', iconSrc: '/icons/window.png' },
+  { id: 'zone', iconSrc: '/icons/zone.png' },
 ]
 
 export function StructureTools() {
+  const t = useTranslations('actionMenu.structure')
   const activeTool = useEditor((state) => state.tool)
   const catalogCategory = useEditor((state) => state.catalogCategory)
   const structureLayer = useEditor((state) => state.structureLayer)
@@ -60,6 +57,8 @@ export function StructureTools() {
 
         const isContextual = contextualTools.includes(tool.id)
 
+        const label = t(tool.id)
+
         return (
           <ActionButton
             className={cn(
@@ -69,7 +68,7 @@ export function StructureTools() {
                 : 'scale-95 bg-transparent opacity-60 grayscale hover:bg-black/20 hover:opacity-100 hover:grayscale-0',
             )}
             key={`${tool.id}-${tool.catalogCategory ?? index}`}
-            label={tool.label}
+            label={label}
             onClick={() => {
               if (!isActive) {
                 setTool(tool.id)
@@ -85,7 +84,7 @@ export function StructureTools() {
             variant="ghost"
           >
             <NextImage
-              alt={tool.label}
+              alt={label}
               className="size-full object-contain"
               height={28}
               src={tool.iconSrc}

@@ -16,6 +16,7 @@ import { Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useCallback, useRef } from 'react'
 import * as THREE from 'three'
+import { useEditorCanvasI18n } from '../../contexts/editor-canvas-i18n'
 import { sfxEmitter } from '../../lib/sfx-bus'
 import useEditor from '../../store/use-editor'
 import { NodeActionMenu } from './node-action-menu'
@@ -24,6 +25,7 @@ const ALLOWED_TYPES = ['item', 'door', 'window', 'roof', 'roof-segment', 'wall',
 const DELETE_ONLY_TYPES = ['wall', 'slab']
 
 export function FloatingActionMenu() {
+  const { nodeMenu: nodeMenuLabels } = useEditorCanvasI18n()
   const selectedIds = useViewer((s) => s.selection.selectedIds)
   const nodes = useScene((s) => s.nodes)
   const mode = useEditor((s) => s.mode)
@@ -50,7 +52,8 @@ export function FloatingActionMenu() {
         const center = box.getCenter(new THREE.Vector3())
         // Position above the object, with extra offset for walls/slabs to avoid covering measurement labels
         const isDeleteOnly = node && DELETE_ONLY_TYPES.includes(node.type)
-        const yOffset = isDeleteOnly ? 0.8 : 0.3
+        // Keep the floating bar well above in-wall measurement labels
+        const yOffset = isDeleteOnly ? 2.15 : 0.35
         groupRef.current.position.set(center.x, box.max.y + yOffset, center.z)
       }
     }
@@ -175,6 +178,7 @@ export function FloatingActionMenu() {
         zIndexRange={[100, 0]}
       >
         <NodeActionMenu
+          nodeLabels={nodeMenuLabels}
           onDelete={handleDelete}
           onDuplicate={node && !DELETE_ONLY_TYPES.includes(node.type) ? handleDuplicate : undefined}
           onMove={node && !DELETE_ONLY_TYPES.includes(node.type) ? handleMove : undefined}

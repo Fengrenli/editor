@@ -3,6 +3,7 @@
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { PanelLeftIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import * as React from 'react'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
@@ -328,6 +329,7 @@ function Sidebar({
 
 function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<typeof Button>) {
   const { toggleSidebar } = useSidebar()
+  const t = useTranslations('editorUi.sidebar')
 
   return (
     <Button
@@ -343,17 +345,18 @@ function SidebarTrigger({ className, onClick, ...props }: React.ComponentProps<t
       {...props}
     >
       <PanelLeftIcon />
-      <span className="sr-only">Toggle Sidebar</span>
+      <span className="sr-only">{t('toggle')}</span>
     </Button>
   )
 }
 
 function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
   const { toggleSidebar } = useSidebar()
+  const t = useTranslations('editorUi.sidebar')
 
   return (
     <button
-      aria-label="Toggle Sidebar"
+      aria-label={t('toggle')}
       className={cn(
         'absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-sidebar-border group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex',
         'in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize',
@@ -367,7 +370,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<'button'>) {
       data-slot="sidebar-rail"
       onClick={toggleSidebar}
       tabIndex={-1}
-      title="Toggle Sidebar"
+      title={t('toggle')}
       {...props}
     />
   )

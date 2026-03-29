@@ -3,6 +3,7 @@
 import { type AnyNode, type AnyNodeId, emitter, useScene, WindowNode } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import { BookMarked, Copy, FlipHorizontal2, Move, Trash2 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useCallback } from 'react'
 import { usePresetsAdapter } from '../../../contexts/presets-context'
 import { sfxEmitter } from '../../../lib/sfx-bus'
@@ -16,6 +17,8 @@ import { PanelWrapper } from './panel-wrapper'
 import { PresetsPopover } from './presets/presets-popover'
 
 export function WindowPanel() {
+  const t = useTranslations('propertyPanel')
+  const tStructure = useTranslations('actionMenu.structure')
   const selectedIds = useViewer((s) => s.selection.selectedIds)
   const setSelection = useViewer((s) => s.setSelection)
   const nodes = useScene((s) => s.nodes)
@@ -178,7 +181,7 @@ export function WindowPanel() {
     <PanelWrapper
       icon="/icons/window.png"
       onClose={handleClose}
-      title={node.name || 'Window'}
+      title={node.name || tStructure('window')}
       width={320}
     >
       {/* Presets strip */}
@@ -197,16 +200,16 @@ export function WindowPanel() {
         >
           <button className="flex w-full items-center gap-2 rounded-lg border border-border/50 bg-[#2C2C2E] px-3 py-2 font-medium text-muted-foreground text-xs transition-colors hover:bg-[#3e3e3e] hover:text-foreground">
             <BookMarked className="h-3.5 w-3.5 shrink-0" />
-            <span>Presets</span>
+            <span>{t('actions.presets')}</span>
           </button>
         </PresetsPopover>
       </div>
 
-      <PanelSection title="Position">
+      <PanelSection title={t('sections.position')}>
         <SliderControl
           label={
             <>
-              X<sub className="ml-[1px] text-[11px] opacity-70">pos</sub>
+              X<sub className="ml-[1px] text-[11px] opacity-70">{t('item.posSub')}</sub>
             </>
           }
           onChange={(v) => handleUpdate({ position: [v, node.position[1], node.position[2]] })}
@@ -218,7 +221,7 @@ export function WindowPanel() {
         <SliderControl
           label={
             <>
-              Y<sub className="ml-[1px] text-[11px] opacity-70">pos</sub>
+              Y<sub className="ml-[1px] text-[11px] opacity-70">{t('item.posSub')}</sub>
             </>
           }
           onChange={(v) => handleUpdate({ position: [node.position[0], v, node.position[2]] })}
@@ -231,15 +234,15 @@ export function WindowPanel() {
           <ActionButton
             className="w-full"
             icon={<FlipHorizontal2 className="h-4 w-4" />}
-            label="Flip Side"
+            label={t('labels.flipSide')}
             onClick={handleFlip}
           />
         </div>
       </PanelSection>
 
-      <PanelSection title="Dimensions">
+      <PanelSection title={t('sections.dimensions')}>
         <SliderControl
-          label="Width"
+          label={t('labels.width')}
           min={0}
           onChange={(v) => handleUpdate({ width: v })}
           precision={2}
@@ -248,7 +251,7 @@ export function WindowPanel() {
           value={Math.round(node.width * 100) / 100}
         />
         <SliderControl
-          label="Height"
+          label={t('labels.height')}
           min={0}
           onChange={(v) => handleUpdate({ height: v })}
           precision={2}
@@ -258,9 +261,9 @@ export function WindowPanel() {
         />
       </PanelSection>
 
-      <PanelSection title="Frame">
+      <PanelSection title={t('sections.frame')}>
         <SliderControl
-          label="Thickness"
+          label={t('labels.thickness')}
           min={0}
           onChange={(v) => handleUpdate({ frameThickness: v })}
           precision={3}
@@ -269,7 +272,7 @@ export function WindowPanel() {
           value={Math.round(node.frameThickness * 1000) / 1000}
         />
         <SliderControl
-          label="Depth"
+          label={t('labels.depth')}
           min={0}
           onChange={(v) => handleUpdate({ frameDepth: v })}
           precision={3}
@@ -279,9 +282,9 @@ export function WindowPanel() {
         />
       </PanelSection>
 
-      <PanelSection title="Grid">
+      <PanelSection title={t('sections.grid')}>
         <SliderControl
-          label="Columns"
+          label={t('labels.columns')}
           max={8}
           min={1}
           onChange={(v) => {
@@ -293,7 +296,7 @@ export function WindowPanel() {
           value={numCols}
         />
         <SliderControl
-          label="Rows"
+          label={t('labels.rows')}
           max={8}
           min={1}
           onChange={(v) => {
@@ -308,12 +311,12 @@ export function WindowPanel() {
         {numCols > 1 && (
           <div className="mt-2 flex flex-col gap-1">
             <div className="mb-1 px-1 font-medium text-[10px] text-muted-foreground/80 uppercase tracking-wider">
-              Col Widths
+              {t('window.colWidths')}
             </div>
             {normCols.map((ratio, i) => (
               <SliderControl
                 key={`c-${i}`}
-                label={`C${i + 1}`}
+                label={t('window.columnShort', { index: i + 1 })}
                 max={95}
                 min={5}
                 onChange={(v) => setColumnRatio(i, v / 100)}
@@ -325,7 +328,7 @@ export function WindowPanel() {
             ))}
             <div className="mt-1 border-border/50 border-t pt-1">
               <SliderControl
-                label="Divider"
+                label={t('labels.divider')}
                 max={0.1}
                 min={0.005}
                 onChange={(v) => handleUpdate({ columnDividerThickness: v })}
@@ -341,12 +344,12 @@ export function WindowPanel() {
         {numRows > 1 && (
           <div className="mt-2 flex flex-col gap-1">
             <div className="mb-1 px-1 font-medium text-[10px] text-muted-foreground/80 uppercase tracking-wider">
-              Row Heights
+              {t('window.rowHeights')}
             </div>
             {normRows.map((ratio, i) => (
               <SliderControl
                 key={`r-${i}`}
-                label={`R${i + 1}`}
+                label={t('window.rowShort', { index: i + 1 })}
                 max={95}
                 min={5}
                 onChange={(v) => setRowRatio(i, v / 100)}
@@ -358,7 +361,7 @@ export function WindowPanel() {
             ))}
             <div className="mt-1 border-border/50 border-t pt-1">
               <SliderControl
-                label="Divider"
+                label={t('labels.divider')}
                 max={0.1}
                 min={0.005}
                 onChange={(v) => handleUpdate({ rowDividerThickness: v })}
@@ -372,16 +375,16 @@ export function WindowPanel() {
         )}
       </PanelSection>
 
-      <PanelSection title="Sill">
+      <PanelSection title={t('sections.sill')}>
         <ToggleControl
           checked={node.sill}
-          label="Enable Sill"
+          label={t('labels.enableSill')}
           onChange={(checked) => handleUpdate({ sill: checked })}
         />
         {node.sill && (
           <div className="mt-1 flex flex-col gap-1">
             <SliderControl
-              label="Depth"
+              label={t('labels.depth')}
               min={0}
               onChange={(v) => handleUpdate({ sillDepth: v })}
               precision={3}
@@ -390,7 +393,7 @@ export function WindowPanel() {
               value={Math.round(node.sillDepth * 1000) / 1000}
             />
             <SliderControl
-              label="Thickness"
+              label={t('labels.thickness')}
               min={0}
               onChange={(v) => handleUpdate({ sillThickness: v })}
               precision={3}
@@ -402,18 +405,22 @@ export function WindowPanel() {
         )}
       </PanelSection>
 
-      <PanelSection title="Actions">
+      <PanelSection title={t('sections.actions')}>
         <ActionGroup>
-          <ActionButton icon={<Move className="h-3.5 w-3.5" />} label="Move" onClick={handleMove} />
+          <ActionButton
+            icon={<Move className="h-3.5 w-3.5" />}
+            label={t('actions.move')}
+            onClick={handleMove}
+          />
           <ActionButton
             icon={<Copy className="h-3.5 w-3.5" />}
-            label="Duplicate"
+            label={t('actions.duplicate')}
             onClick={handleDuplicate}
           />
           <ActionButton
             className="hover:bg-red-500/20"
             icon={<Trash2 className="h-3.5 w-3.5 text-red-400" />}
-            label="Delete"
+            label={t('actions.delete')}
             onClick={handleDelete}
           />
         </ActionGroup>

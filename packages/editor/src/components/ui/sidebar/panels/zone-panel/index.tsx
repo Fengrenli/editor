@@ -1,6 +1,9 @@
+'use client'
+
 import { emitter, useScene, type ZoneNode } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import { Camera, Hexagon, Trash2 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { ColorDot } from './../../../../../components/ui/primitives/color-dot'
 import {
@@ -12,6 +15,7 @@ import { cn } from './../../../../../lib/utils'
 import useEditor from './../../../../../store/use-editor'
 
 function ZoneItem({ zone }: { zone: ZoneNode }) {
+  const t = useTranslations('sitePanel')
   const [cameraPopoverOpen, setCameraPopoverOpen] = useState(false)
   const deleteNode = useScene((state) => state.deleteNode)
   const updateNode = useScene((state) => state.updateNode)
@@ -57,7 +61,8 @@ function ZoneItem({ zone }: { zone: ZoneNode }) {
           <button
             className="relative flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground opacity-0 transition-colors hover:bg-black/5 hover:text-foreground group-hover/row:opacity-100 dark:hover:bg-white/10"
             onClick={(e) => e.stopPropagation()}
-            title="Camera snapshot"
+            title={t('cameraSnapshot')}
+            type="button"
           >
             <Camera className="h-3 w-3" />
             {zone.camera && (
@@ -80,9 +85,10 @@ function ZoneItem({ zone }: { zone: ZoneNode }) {
                   emitter.emit('camera-controls:view', { nodeId: zone.id })
                   setCameraPopoverOpen(false)
                 }}
+                type="button"
               >
                 <Camera className="h-3.5 w-3.5" />
-                View snapshot
+                {t('viewSnapshot')}
               </button>
             )}
             <button
@@ -92,9 +98,10 @@ function ZoneItem({ zone }: { zone: ZoneNode }) {
                 emitter.emit('camera-controls:capture', { nodeId: zone.id })
                 setCameraPopoverOpen(false)
               }}
+              type="button"
             >
               <Camera className="h-3.5 w-3.5" />
-              {zone.camera ? 'Update snapshot' : 'Take snapshot'}
+              {zone.camera ? t('updateSnapshot') : t('takeSnapshot')}
             </button>
             {zone.camera && (
               <button
@@ -104,9 +111,10 @@ function ZoneItem({ zone }: { zone: ZoneNode }) {
                   updateNode(zone.id, { camera: undefined })
                   setCameraPopoverOpen(false)
                 }}
+                type="button"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                Clear snapshot
+                {t('clearSnapshot')}
               </button>
             )}
           </div>
@@ -115,6 +123,7 @@ function ZoneItem({ zone }: { zone: ZoneNode }) {
       <button
         className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground opacity-0 transition-colors hover:bg-black/5 hover:text-foreground group-hover/row:opacity-100 dark:hover:bg-white/10"
         onClick={handleDelete}
+        type="button"
       >
         <Trash2 className="h-3 w-3" />
       </button>
@@ -123,6 +132,7 @@ function ZoneItem({ zone }: { zone: ZoneNode }) {
 }
 
 export function ZonePanel() {
+  const t = useTranslations('sitePanel')
   const nodes = useScene((state) => state.nodes)
   const currentLevelId = useViewer((state) => state.selection.levelId)
   const setPhase = useEditor((state) => state.setPhase)
@@ -144,9 +154,7 @@ export function ZonePanel() {
 
   if (!currentLevelId) {
     return (
-      <div className="px-3 py-4 text-muted-foreground text-sm">
-        Select a level to view and create zones
-      </div>
+      <div className="px-3 py-4 text-muted-foreground text-sm">{t('selectLevelForZones')}</div>
     )
   }
 
@@ -154,9 +162,13 @@ export function ZonePanel() {
     <div className="py-1">
       {levelZones.length === 0 ? (
         <div className="px-3 py-4 text-muted-foreground text-sm">
-          No zones on this level.{' '}
-          <button className="cursor-pointer text-primary hover:underline" onClick={handleAddZone}>
-            Add one
+          {t('noZonesOnLevel')}{' '}
+          <button
+            className="cursor-pointer text-primary hover:underline"
+            onClick={handleAddZone}
+            type="button"
+          >
+            {t('addZoneLink')}
           </button>
         </div>
       ) : (

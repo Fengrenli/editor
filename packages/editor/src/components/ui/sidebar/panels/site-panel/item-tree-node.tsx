@@ -1,6 +1,7 @@
 import { type AnyNodeId, type ItemNode, useScene } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import useEditor from './../../../../../store/use-editor'
 import { InlineRenameInput } from './inline-rename-input'
@@ -24,6 +25,7 @@ interface ItemTreeNodeProps {
 }
 
 export function ItemTreeNode({ node, depth, isLast }: ItemTreeNodeProps) {
+  const t = useTranslations('sitePanel')
   const [isEditing, setIsEditing] = useState(false)
   const [expanded, setExpanded] = useState(true)
   const iconSrc = CATEGORY_ICONS[node.asset.category] || '/icons/couch.png'
@@ -73,7 +75,7 @@ export function ItemTreeNode({ node, depth, isLast }: ItemTreeNodeProps) {
     setHoveredId(null)
   }
 
-  const defaultName = node.asset.name || 'Item'
+  const defaultName = node.asset.name || t('defaultItemName')
   const hasChildren = node.children && node.children.length > 0
 
   return (

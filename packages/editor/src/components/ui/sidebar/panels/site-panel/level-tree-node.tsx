@@ -1,6 +1,9 @@
+'use client'
+
 import type { LevelNode } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import { Layers } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { InlineRenameInput } from './inline-rename-input'
 import { focusTreeNode, TreeNode, TreeNodeWrapper } from './tree-node'
@@ -13,6 +16,7 @@ interface LevelTreeNodeProps {
 }
 
 export function LevelTreeNode({ node, depth, isLast }: LevelTreeNodeProps) {
+  const t = useTranslations('sitePanel')
   const [expanded, setExpanded] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const isSelected = useViewer((state) => state.selection.levelId === node.id)
@@ -27,7 +31,7 @@ export function LevelTreeNode({ node, depth, isLast }: LevelTreeNodeProps) {
     focusTreeNode(node.id)
   }
 
-  const defaultName = `Level ${node.level}`
+  const defaultName = t('levelNumbered', { level: node.level })
 
   return (
     <TreeNodeWrapper

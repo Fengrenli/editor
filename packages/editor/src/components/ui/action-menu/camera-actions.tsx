@@ -2,9 +2,11 @@
 
 import { emitter } from '@pascal-app/core'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { ActionButton } from './action-button'
 
 export function CameraActions() {
+  const t = useTranslations('actionMenu.camera')
   const goToTopView = () => {
     emitter.emit('camera-controls:top-view')
   }
@@ -22,13 +24,13 @@ export function CameraActions() {
       {/* Orbit CCW */}
       <ActionButton
         className="group hover:bg-white/5"
-        label="Orbit Left"
+        label={t('orbitLeft')}
         onClick={orbitCCW}
         size="icon"
         variant="ghost"
       >
         <Image
-          alt="Orbit Left"
+          alt={t('orbitLeft')}
           className="h-[28px] w-[28px] -scale-x-100 object-contain opacity-70 transition-opacity group-hover:opacity-100"
           height={28}
           src="/icons/rotate.png"
@@ -39,13 +41,13 @@ export function CameraActions() {
       {/* Orbit CW */}
       <ActionButton
         className="group hover:bg-white/5"
-        label="Orbit Right"
+        label={t('orbitRight')}
         onClick={orbitCW}
         size="icon"
         variant="ghost"
       >
         <Image
-          alt="Orbit Right"
+          alt={t('orbitRight')}
           className="h-[28px] w-[28px] object-contain opacity-70 transition-opacity group-hover:opacity-100"
           height={28}
           src="/icons/rotate.png"
@@ -56,13 +58,13 @@ export function CameraActions() {
       {/* Top View */}
       <ActionButton
         className="group hover:bg-white/5"
-        label="Top View"
+        label={t('topView')}
         onClick={goToTopView}
         size="icon"
         variant="ghost"
       >
         <Image
-          alt="Top View"
+          alt={t('topView')}
           className="h-[28px] w-[28px] object-contain opacity-70 transition-opacity group-hover:opacity-100"
           height={28}
           src="/icons/topview.png"

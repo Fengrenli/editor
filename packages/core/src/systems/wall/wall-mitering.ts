@@ -208,7 +208,8 @@ function calculateJunctionIntersections(
     const det = wall1.edgeA.a * wall2.edgeB.b - wall2.edgeB.a * wall1.edgeA.b
 
     // If lines are parallel (det ≈ 0), skip this intersection - walls will use defaults
-    if (Math.abs(det) < 1e-9) {
+    // Slightly looser than 1e-9 so short / high-precision walls still get a miter
+    if (Math.abs(det) < 1e-11) {
       continue
     }
 

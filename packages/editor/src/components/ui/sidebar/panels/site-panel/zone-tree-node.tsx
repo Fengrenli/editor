@@ -1,5 +1,6 @@
 import { useScene, type ZoneNode } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { ColorDot } from './../../../../../components/ui/primitives/color-dot'
 import { InlineRenameInput } from './inline-rename-input'
@@ -13,6 +14,7 @@ interface ZoneTreeNodeProps {
 }
 
 export function ZoneTreeNode({ node, depth, isLast }: ZoneTreeNodeProps) {
+  const t = useTranslations('sitePanel')
   const [isEditing, setIsEditing] = useState(false)
   const updateNode = useScene((state) => state.updateNode)
   const isSelected = useViewer((state) => state.selection.zoneId === node.id)
@@ -38,7 +40,7 @@ export function ZoneTreeNode({ node, depth, isLast }: ZoneTreeNodeProps) {
 
   // Calculate approximate area from polygon
   const area = calculatePolygonArea(node.polygon).toFixed(1)
-  const defaultName = `Zone (${area}m²)`
+  const defaultName = t('zoneWithArea', { area })
 
   return (
     <TreeNodeWrapper

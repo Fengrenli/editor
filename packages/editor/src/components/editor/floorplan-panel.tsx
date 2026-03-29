@@ -32,6 +32,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import { useTranslations } from 'next-intl'
 import { useShallow } from 'zustand/react/shallow'
 import { sfxEmitter } from '../../lib/sfx-bus'
 import { cn } from '../../lib/utils'
@@ -189,14 +190,6 @@ const FLOORPLAN_QUICK_BUILD_TOOL_IDS = ['wall', 'door', 'window', 'slab', 'zone'
 
 type FloorplanQuickBuildTool = (typeof FLOORPLAN_QUICK_BUILD_TOOL_IDS)[number]
 
-const FLOORPLAN_QUICK_BUILD_TOOL_LABELS: Record<FloorplanQuickBuildTool, string> = {
-  wall: 'Wall',
-  door: 'Door',
-  window: 'Window',
-  slab: 'Floor',
-  zone: 'Zone',
-}
-
 const FLOORPLAN_QUICK_BUILD_TOOL_FALLBACK_ICONS: Record<FloorplanQuickBuildTool, string> = {
   wall: '/icons/wall.png',
   door: '/icons/door.png',
@@ -211,7 +204,6 @@ const FLOORPLAN_QUICK_BUILD_TOOLS = FLOORPLAN_QUICK_BUILD_TOOL_IDS.map((id) => {
   return {
     id,
     iconSrc: toolConfig?.iconSrc ?? FLOORPLAN_QUICK_BUILD_TOOL_FALLBACK_ICONS[id],
-    label: FLOORPLAN_QUICK_BUILD_TOOL_LABELS[id],
   }
 })
 
@@ -439,12 +431,17 @@ function toWallPlanPoint(point: Point2D): WallPlanPoint {
   return [point.x, point.y]
 }
 
+/**
+ * Map level plan X (world X, same as Three.js x) to SVG x — **not** negated, so 2D matches 3D left/right.
+ * (Legacy code negated X, which mirrored the floorplan vs the viewer for typical camera angles.)
+ */
 function toSvgX(value: number): number {
-  return -value
+  return value
 }
 
+/** Map level plan Z (world z, Three.js z) to SVG y — same sign as 3D so 2D/3D are not vertically flipped. */
 function toSvgY(value: number): number {
-  return -value
+  return value
 }
 
 function toSvgPoint(point: Point2D): SvgPoint {
@@ -1888,6 +1885,96 @@ const FloorplanGridLayer = memo(function FloorplanGridLayer({
   )
 })
 
+/** Plan-view world axes through origin: horizontal = +X (red), vertical = +Z (green). */
+const FloorplanOriginAxesLayer = memo(function FloorplanOriginAxesLayer({
+  viewBox,
+  isDark,
+}: {
+  viewBox: { minX: number; minY: number; width: number; height: number }
+  isDark: boolean
+}) {
+  const maxX = viewBox.minX + viewBox.width
+  const maxY = viewBox.minY + viewBox.height
+  const strokeW = 0.095
+  const haloW = strokeW + 0.07
+  const haloStroke = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(15,23,42,0.35)'
+  const strokeX = '#ff1a1a'
+  const strokeZ = '#00e676'
+
+  return (
+    <g aria-hidden="true" pointerEvents="none">
+      <line
+        stroke={haloStroke}
+        strokeLinecap="round"
+        strokeWidth={haloW}
+        vectorEffect="non-scaling-stroke"
+        x1={viewBox.minX}
+        x2={maxX}
+        y1={0}
+        y2={0}
+      />
+      <line
+        stroke={strokeX}
+        strokeLinecap="round"
+        strokeWidth={strokeW}
+        vectorEffect="non-scaling-stroke"
+        x1={viewBox.minX}
+        x2={maxX}
+        y1={0}
+        y2={0}
+      />
+      <line
+        stroke={haloStroke}
+        strokeLinecap="round"
+        strokeWidth={haloW}
+        vectorEffect="non-scaling-stroke"
+        x1={0}
+        x2={0}
+        y1={viewBox.minY}
+        y2={maxY}
+      />
+      <line
+        stroke={strokeZ}
+        strokeLinecap="round"
+        strokeWidth={strokeW}
+        vectorEffect="non-scaling-stroke"
+        x1={0}
+        x2={0}
+        y1={viewBox.minY}
+        y2={maxY}
+      />
+      <text
+        dominantBaseline="hanging"
+        fill={strokeX}
+        fontSize={0.18}
+        fontWeight={700}
+        stroke={isDark ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.85)'}
+        strokeWidth={0.028}
+        paintOrder="stroke fill"
+        vectorEffect="non-scaling-stroke"
+        x={maxX - 0.52}
+        y={-0.1}
+      >
+        +X
+      </text>
+      <text
+        dominantBaseline="hanging"
+        fill={strokeZ}
+        fontSize={0.18}
+        fontWeight={700}
+        stroke={isDark ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.85)'}
+        strokeWidth={0.028}
+        paintOrder="stroke fill"
+        vectorEffect="non-scaling-stroke"
+        x={0.1}
+        y={viewBox.minY + 0.12}
+      >
+        +Z
+      </text>
+    </g>
+  )
+})
+
 const FloorplanGuideLayer = memo(function FloorplanGuideLayer({
   guides,
   isInteractive,
@@ -3019,6 +3106,9 @@ const FloorplanPolygonHandleLayer = memo(function FloorplanPolygonHandleLayer({
 })
 
 export function FloorplanPanel() {
+  const tFloorplanQuick = useTranslations('actionMenu.floorplanQuick')
+  const tFp = useTranslations('editorUi.floorplan')
+  const tPropLabels = useTranslations('propertyPanel.labels')
   const viewportHostRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<SVGSVGElement>(null)
   const panStateRef = useRef<PanState | null>(null)
@@ -3358,8 +3448,8 @@ export function FloorplanPanel() {
     : null
   const hasGuideImages = levelGuides.length > 0
   const guideImagesDescription = hasGuideImages
-    ? `${levelGuides.length} guide image${levelGuides.length === 1 ? '' : 's'} on this level`
-    : 'No guide images on this level'
+    ? tFp('guideCount', { count: levelGuides.length })
+    : tFp('guideCountZero')
 
   const handleGuideOpacityChange = useCallback(
     (guideId: GuideNode['id'], opacity: number) => {
@@ -6819,7 +6909,7 @@ export function FloorplanPanel() {
 
   return (
     <div
-      className="pointer-events-auto fixed z-50 flex flex-col overflow-hidden rounded-smooth-xl bg-background/95 shadow-[0_24px_48px_rgba(15,23,42,0.16),0_8px_20px_rgba(15,23,42,0.08)] ring-1 ring-border/35 backdrop-blur-md"
+      className="pointer-events-auto fixed z-40 flex flex-col overflow-hidden rounded-smooth-xl bg-background/95 shadow-[0_24px_48px_rgba(15,23,42,0.16),0_8px_20px_rgba(15,23,42,0.08)] ring-1 ring-border/35 backdrop-blur-md"
       onPointerEnter={() => setFloorplanHovered(true)}
       onPointerLeave={() => {
         setFloorplanHovered(false)
@@ -6939,7 +7029,9 @@ export function FloorplanPanel() {
               <TooltipTrigger asChild>
                 <span className="flex">
                   <button
-                    aria-label={isSiteEditShortcutActive ? 'Exit site editing' : 'Edit site'}
+                    aria-label={
+                      isSiteEditShortcutActive ? tFp('exitSiteEditAria') : tFp('editSiteAria')
+                    }
                     aria-pressed={isSiteEditShortcutActive}
                     className={cn(
                       'flex h-8 w-8 items-center justify-center rounded-lg transition-[background-color,filter,opacity,transform] duration-200 active:scale-[0.96]',
@@ -6965,9 +7057,9 @@ export function FloorplanPanel() {
               <TooltipContent side="bottom" sideOffset={8}>
                 {canUseSiteEditShortcut
                   ? isSiteEditShortcutActive
-                    ? 'Exit site editing'
-                    : 'Edit site'
-                  : 'Site editing is only available on ground level'}
+                    ? tFp('exitSiteEditTooltip')
+                    : tFp('editSiteTooltip')
+                  : tFp('siteEditGroundOnly')}
               </TooltipContent>
             </Tooltip>
           </div>
@@ -6977,7 +7069,7 @@ export function FloorplanPanel() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    aria-label={showGuides ? 'Hide guide images' : 'Show guide images'}
+                    aria-label={showGuides ? tFp('hideGuidesAria') : tFp('showGuidesAria')}
                     aria-pressed={showGuides}
                     className={cn(
                       'flex h-8 w-8 items-center justify-center rounded-lg transition-[background-color,filter,opacity,transform] duration-200 active:scale-[0.96]',
@@ -6999,7 +7091,7 @@ export function FloorplanPanel() {
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" sideOffset={8}>
-                  {showGuides ? 'Hide guide images' : 'Show guide images'}
+                  {showGuides ? tFp('hideGuidesTooltip') : tFp('showGuidesTooltip')}
                 </TooltipContent>
               </Tooltip>
 
@@ -7009,7 +7101,7 @@ export function FloorplanPanel() {
                 <button
                   aria-expanded={isGuideQuickAccessOpen}
                   aria-haspopup="dialog"
-                  aria-label="Adjust guide image opacity"
+                  aria-label={tFp('adjustGuideOpacityAria')}
                   className={cn(
                     'flex h-8 w-7 items-center justify-center rounded-lg transition-[background-color,opacity,transform] duration-200 active:scale-[0.96]',
                     isGuideQuickAccessOpen
@@ -7048,7 +7140,7 @@ export function FloorplanPanel() {
                       />
                     </span>
                     <div className="min-w-0">
-                      <p className="font-medium text-foreground text-sm">Guide images</p>
+                      <p className="font-medium text-foreground text-sm">{tFp('guideImagesHeading')}</p>
                       <p className="text-muted-foreground text-xs">{guideImagesDescription}</p>
                     </div>
                   </div>
@@ -7068,12 +7160,12 @@ export function FloorplanPanel() {
                               src="/icons/floorplan.png"
                             />
                             <p className="truncate font-medium text-foreground text-sm">
-                              {guide.name || `Guide image ${index + 1}`}
+                              {guide.name || tFp('guideDefaultName', { n: index + 1 })}
                             </p>
                           </div>
 
                           <SliderControl
-                            label="Opacity"
+                            label={tPropLabels('opacity')}
                             max={100}
                             min={0}
                             onChange={(value) => handleGuideOpacityChange(guide.id, value)}
@@ -7087,7 +7179,7 @@ export function FloorplanPanel() {
                     </div>
                   ) : (
                     <div className="rounded-xl border border-border/45 border-dashed bg-background/60 px-3 py-4 text-muted-foreground text-sm">
-                      No guide images on this level yet.
+                      {tFp('noGuidesYet')}
                     </div>
                   )}
                 </div>
@@ -7098,12 +7190,13 @@ export function FloorplanPanel() {
           <div className="flex items-center gap-1 rounded-xl border border-border/45 bg-background/92 p-1 shadow-[0_1px_2px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.04)]">
             {FLOORPLAN_QUICK_BUILD_TOOLS.map((quickTool) => {
               const isActive = phase === 'structure' && mode === 'build' && tool === quickTool.id
+              const quickLabel = tFloorplanQuick(quickTool.id)
 
               return (
                 <Tooltip key={quickTool.id}>
                   <TooltipTrigger asChild>
                     <button
-                      aria-label={`Activate ${quickTool.label.toLowerCase()} tool`}
+                      aria-label={tFloorplanQuick('activateAria', { tool: quickLabel })}
                       aria-pressed={isActive}
                       className={cn(
                         'flex h-8 w-8 items-center justify-center rounded-lg transition-[background-color,filter,opacity,transform] duration-200 active:scale-[0.96]',
@@ -7123,7 +7216,7 @@ export function FloorplanPanel() {
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" sideOffset={8}>
-                    {quickTool.label}
+                    {quickLabel}
                   </TooltipContent>
                 </Tooltip>
               )
@@ -7139,7 +7232,7 @@ export function FloorplanPanel() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  aria-label="Click select"
+                  aria-label={tFp('clickSelectAria')}
                   aria-pressed={floorplanSelectionTool === 'click'}
                   className={cn(
                     'flex h-8 w-8 items-center justify-center rounded-lg transition-[background-color,transform] duration-200 active:scale-[0.96]',
@@ -7164,14 +7257,14 @@ export function FloorplanPanel() {
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" sideOffset={8}>
-                Click select
+                {tFp('clickSelectTooltip')}
               </TooltipContent>
             </Tooltip>
 
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  aria-label="Box select"
+                  aria-label={tFp('boxSelectAria')}
                   aria-pressed={floorplanSelectionTool === 'marquee'}
                   className={cn(
                     'flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-[background-color,color,transform] duration-200 active:scale-[0.96]',
@@ -7186,7 +7279,7 @@ export function FloorplanPanel() {
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom" sideOffset={8}>
-                Box select
+                {tFp('boxSelectTooltip')}
               </TooltipContent>
             </Tooltip>
           </div>
@@ -7194,7 +7287,7 @@ export function FloorplanPanel() {
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                aria-label="Close floorplan"
+                aria-label={tFp('closeFloorplanAria')}
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/45 bg-background/92 text-muted-foreground shadow-[0_1px_2px_rgba(15,23,42,0.08),inset_0_1px_0_rgba(255,255,255,0.04)] transition-[background-color,color,transform] duration-200 hover:bg-accent hover:text-foreground active:scale-[0.96]"
                 onClick={() => setFloorplanOpen(false)}
                 type="button"
@@ -7203,7 +7296,7 @@ export function FloorplanPanel() {
               </button>
             </TooltipTrigger>
             <TooltipContent side="bottom" sideOffset={8}>
-              Close floorplan
+              {tFp('closeFloorplanTooltip')}
             </TooltipContent>
           </Tooltip>
         </div>
@@ -7308,6 +7401,9 @@ export function FloorplanPanel() {
               onGuideTranslateStart={handleGuideTranslateStart}
               selectedGuideId={selectedGuideId}
             />
+
+            {/* 轴线画在参考图之上，便于对位；墙体/场地等仍在更上层 */}
+            <FloorplanOriginAxesLayer isDark={theme === 'dark'} viewBox={viewBox} />
 
             <FloorplanSiteLayer isEditing={isSiteEditActive} sitePolygon={visibleSitePolygon} />
 

@@ -11,6 +11,7 @@ import {
 } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import { Copy, Move, Plus, Trash2 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useCallback } from 'react'
 import { sfxEmitter } from '../../../lib/sfx-bus'
 import useEditor from '../../../store/use-editor'
@@ -21,6 +22,7 @@ import { SliderControl } from '../controls/slider-control'
 import { PanelWrapper } from './panel-wrapper'
 
 export function RoofPanel() {
+  const t = useTranslations('propertyPanel')
   const selectedIds = useViewer((s) => s.selection.selectedIds)
   const setSelection = useViewer((s) => s.setSelection)
   const nodes = useScene((s) => s.nodes)
@@ -132,10 +134,10 @@ export function RoofPanel() {
     <PanelWrapper
       icon="/icons/roof.png"
       onClose={handleClose}
-      title={node.name || 'Roof'}
+      title={node.name || t('roof.titleFallback')}
       width={300}
     >
-      <PanelSection title="Segments">
+      <PanelSection title={t('sections.segments')}>
         <div className="flex flex-col gap-1">
           {segments.map((seg, i) => (
             <button
@@ -144,19 +146,21 @@ export function RoofPanel() {
               onClick={() => handleSelectSegment(seg.id)}
               type="button"
             >
-              <span className="truncate">{seg.name || `Segment ${i + 1}`}</span>
-              <span className="text-muted-foreground text-xs capitalize">{seg.roofType}</span>
+              <span className="truncate">{seg.name || t('roof.segmentFallback', { n: i + 1 })}</span>
+              <span className="text-muted-foreground text-xs capitalize">
+                {t(`roofType.${seg.roofType}`)}
+              </span>
             </button>
           ))}
         </div>
         <ActionButton
           icon={<Plus className="h-3.5 w-3.5" />}
-          label="Add Segment"
+          label={t('roof.addSegment')}
           onClick={handleAddSegment}
         />
       </PanelSection>
 
-      <PanelSection title="Position">
+      <PanelSection title={t('sections.position')}>
         <MetricControl
           label="X"
           max={50}
@@ -200,7 +204,7 @@ export function RoofPanel() {
           value={Math.round(node.position[2] * 100) / 100}
         />
         <SliderControl
-          label="Rotation"
+          label={t('labels.rotation')}
           max={180}
           min={-180}
           onChange={(degrees) => {
@@ -213,14 +217,14 @@ export function RoofPanel() {
         />
         <div className="flex gap-1.5 px-1 pt-2 pb-1">
           <ActionButton
-            label="-45°"
+            label={t('roofSegment.rotateNeg45')}
             onClick={() => {
               sfxEmitter.emit('sfx:item-rotate')
               handleUpdate({ rotation: node.rotation - Math.PI / 4 })
             }}
           />
           <ActionButton
-            label="+45°"
+            label={t('roofSegment.rotatePos45')}
             onClick={() => {
               sfxEmitter.emit('sfx:item-rotate')
               handleUpdate({ rotation: node.rotation + Math.PI / 4 })
@@ -229,18 +233,22 @@ export function RoofPanel() {
         </div>
       </PanelSection>
 
-      <PanelSection title="Actions">
+      <PanelSection title={t('sections.actions')}>
         <ActionGroup>
-          <ActionButton icon={<Move className="h-3.5 w-3.5" />} label="Move" onClick={handleMove} />
+          <ActionButton
+            icon={<Move className="h-3.5 w-3.5" />}
+            label={t('actions.move')}
+            onClick={handleMove}
+          />
           <ActionButton
             icon={<Copy className="h-3.5 w-3.5" />}
-            label="Duplicate"
+            label={t('actions.duplicate')}
             onClick={handleDuplicate}
           />
           <ActionButton
             className="hover:bg-red-500/20"
             icon={<Trash2 className="h-3.5 w-3.5 text-red-400" />}
-            label="Delete"
+            label={t('actions.delete')}
             onClick={handleDelete}
           />
         </ActionGroup>

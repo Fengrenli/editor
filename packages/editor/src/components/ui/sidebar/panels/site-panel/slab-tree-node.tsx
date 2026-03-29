@@ -1,6 +1,7 @@
 import type { SlabNode } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import useEditor from './../../../../../store/use-editor'
 import { InlineRenameInput } from './inline-rename-input'
@@ -14,6 +15,7 @@ interface SlabTreeNodeProps {
 }
 
 export function SlabTreeNode({ node, depth, isLast }: SlabTreeNodeProps) {
+  const t = useTranslations('sitePanel')
   const [isEditing, setIsEditing] = useState(false)
   const selectedIds = useViewer((state) => state.selection.selectedIds)
   const isSelected = selectedIds.includes(node.id)
@@ -43,7 +45,7 @@ export function SlabTreeNode({ node, depth, isLast }: SlabTreeNodeProps) {
 
   // Calculate approximate area from polygon
   const area = calculatePolygonArea(node.polygon).toFixed(1)
-  const defaultName = `Slab (${area}m²)`
+  const defaultName = t('slabWithArea', { area })
 
   return (
     <TreeNodeWrapper

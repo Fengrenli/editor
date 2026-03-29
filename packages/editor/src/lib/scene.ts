@@ -369,20 +369,39 @@ export function applySceneGraphToEditor(sceneGraph?: SceneGraph | null) {
   syncEditorSelectionFromCurrentScene()
 }
 
-const LOCAL_STORAGE_KEY = 'pascal-editor-scene'
+/** Unscoped key — legacy single-project saves before per-project storage */
+export const LEGACY_SCENE_STORAGE_KEY = 'pascal-editor-scene'
 
-export function saveSceneToLocalStorage(scene: SceneGraph): void {
+export function getSceneStorageKey(projectId?: string | null): string {
+  if (projectId) {
+    return `${LEGACY_SCENE_STORAGE_KEY}:${projectId}`
+  }
+  return LEGACY_SCENE_STORAGE_KEY
+}
+
+export function saveSceneToLocalStorage(scene: SceneGraph, projectId?: string | null): void {
   try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(scene))
+    localStorage.setItem(getSceneStorageKey(projectId), JSON.stringify(scene))
   } catch {
     // Swallow storage quota errors
   }
 }
 
-export function loadSceneFromLocalStorage(): SceneGraph | null {
+export function loadSceneFromLocalStorage(projectId?: string | null): SceneGraph | null {
   try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as SceneGraph) : null
+    const key = getSceneStorageKey(projectId)
+    const raw = localStorage.getItem(key)
+    if (raw) {
+      return JSON.parse(raw) as SceneGraph
+    }
+    // Migrate older installs: data only under unscoped key, first project id
+    if (projectId === 'local-editor') {
+      const legacy = localStorage.getItem(LEGACY_SCENE_STORAGE_KEY)
+      if (legacy) {
+        return JSON.parse(legacy) as SceneGraph
+      }
+    }
+    return null
   } catch {
     return null
   }

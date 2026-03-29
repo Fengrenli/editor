@@ -1,7 +1,10 @@
+'use client'
+
 import { Html } from '@react-three/drei'
 import type { ThreeElements } from '@react-three/fiber'
 import { forwardRef } from 'react'
 import type { Group } from 'three'
+import { useEditorCanvasI18n } from '../../../contexts/editor-canvas-i18n'
 import { furnishTools } from '../../../components/ui/action-menu/furnish-tools'
 import { tools } from '../../../components/ui/action-menu/structure-tools'
 import { EDITOR_LAYER } from '../../../lib/constants'
@@ -18,6 +21,7 @@ export const CursorSphere = forwardRef<Group, CursorSphereProps>(function Cursor
   { color = '#818cf8', showTooltip = true, height = 2.5, visible = true, ...props },
   ref,
 ) {
+  const { resolveToolLabel } = useEditorCanvasI18n()
   const tool = useEditor((s) => s.tool)
   const mode = useEditor((s) => s.mode)
   const catalogCategory = useEditor((s) => s.catalogCategory)
@@ -32,6 +36,9 @@ export const CursorSphere = forwardRef<Group, CursorSphereProps>(function Cursor
       activeToolConfig = tools.find((t) => t.id === tool)
     }
   }
+
+  const toolAlt =
+    activeToolConfig == null ? '' : resolveToolLabel(mode, tool, catalogCategory)
 
   const isVisible = visible && !isFloorplanHovered
 
@@ -99,7 +106,7 @@ export const CursorSphere = forwardRef<Group, CursorSphereProps>(function Cursor
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            alt={activeToolConfig.label}
+            alt={toolAlt || ''}
             src={activeToolConfig.iconSrc}
             style={{
               width: '100%',

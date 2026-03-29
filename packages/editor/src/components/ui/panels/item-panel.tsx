@@ -3,6 +3,7 @@
 import { type AnyNode, getScaledDimensions, ItemNode, useScene } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import { Copy, Link, Link2Off, Move, Trash2 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useCallback, useState } from 'react'
 import { sfxEmitter } from '../../../lib/sfx-bus'
 import { cn } from '../../../lib/utils'
@@ -14,6 +15,7 @@ import { CollectionsPopover } from './collections/collections-popover'
 import { PanelWrapper } from './panel-wrapper'
 
 export function ItemPanel() {
+  const t = useTranslations('propertyPanel')
   const selectedIds = useViewer((s) => s.selection.selectedIds)
   const setSelection = useViewer((s) => s.setSelection)
   const nodes = useScene((s) => s.nodes)
@@ -84,11 +86,11 @@ export function ItemPanel() {
       title={node.name || node.asset.name}
       width={300}
     >
-      <PanelSection title="Position">
+      <PanelSection title={t('sections.position')}>
         <SliderControl
           label={
             <>
-              X<sub className="ml-[1px] text-[11px] opacity-70">pos</sub>
+              X<sub className="ml-[1px] text-[11px] opacity-70">{t('item.posSub')}</sub>
             </>
           }
           max={node.position[0] + 2}
@@ -104,7 +106,7 @@ export function ItemPanel() {
         <SliderControl
           label={
             <>
-              Y<sub className="ml-[1px] text-[11px] opacity-70">pos</sub>
+              Y<sub className="ml-[1px] text-[11px] opacity-70">{t('item.posSub')}</sub>
             </>
           }
           max={node.position[1] + 2}
@@ -120,7 +122,7 @@ export function ItemPanel() {
         <SliderControl
           label={
             <>
-              Z<sub className="ml-[1px] text-[11px] opacity-70">pos</sub>
+              Z<sub className="ml-[1px] text-[11px] opacity-70">{t('item.posSub')}</sub>
             </>
           }
           max={node.position[2] + 2}
@@ -135,11 +137,11 @@ export function ItemPanel() {
         />
       </PanelSection>
 
-      <PanelSection title="Rotation">
+      <PanelSection title={t('sections.rotation')}>
         <SliderControl
           label={
             <>
-              Y<sub className="ml-[1px] text-[11px] opacity-70">rot</sub>
+              Y<sub className="ml-[1px] text-[11px] opacity-70">{t('item.rotSub')}</sub>
             </>
           }
           max={Math.round((node.rotation[1] * 180) / Math.PI) + 45}
@@ -155,7 +157,7 @@ export function ItemPanel() {
         />
         <div className="flex gap-1.5 px-1 pt-2 pb-1">
           <ActionButton
-            label="-45°"
+            label={t('roofSegment.rotateNeg45')}
             onClick={() => {
               sfxEmitter.emit('sfx:item-rotate')
               const currentDegrees = (node.rotation[1] * 180) / Math.PI
@@ -164,7 +166,7 @@ export function ItemPanel() {
             }}
           />
           <ActionButton
-            label="+45°"
+            label={t('roofSegment.rotatePos45')}
             onClick={() => {
               sfxEmitter.emit('sfx:item-rotate')
               const currentDegrees = (node.rotation[1] * 180) / Math.PI
@@ -175,10 +177,10 @@ export function ItemPanel() {
         </div>
       </PanelSection>
 
-      <PanelSection title="Scale">
+      <PanelSection title={t('sections.scale')}>
         <div className="flex items-center justify-between px-2 pb-2">
           <span className="font-medium text-[10px] text-muted-foreground/80 uppercase tracking-wider">
-            Uniform Scale
+            {t('labels.uniformScale')}
           </span>
           <button
             className={cn(
@@ -196,7 +198,7 @@ export function ItemPanel() {
           <SliderControl
             label={
               <>
-                XYZ<sub className="ml-[1px] text-[11px] opacity-70">scale</sub>
+                XYZ<sub className="ml-[1px] text-[11px] opacity-70">{t('item.scaleSub')}</sub>
               </>
             }
             max={10}
@@ -214,7 +216,7 @@ export function ItemPanel() {
             <SliderControl
               label={
                 <>
-                  X<sub className="ml-[1px] text-[11px] opacity-70">scale</sub>
+                  X<sub className="ml-[1px] text-[11px] opacity-70">{t('item.scaleSub')}</sub>
                 </>
               }
               max={10}
@@ -229,7 +231,7 @@ export function ItemPanel() {
             <SliderControl
               label={
                 <>
-                  Y<sub className="ml-[1px] text-[11px] opacity-70">scale</sub>
+                  Y<sub className="ml-[1px] text-[11px] opacity-70">{t('item.scaleSub')}</sub>
                 </>
               }
               max={10}
@@ -244,7 +246,7 @@ export function ItemPanel() {
             <SliderControl
               label={
                 <>
-                  Z<sub className="ml-[1px] text-[11px] opacity-70">scale</sub>
+                  Z<sub className="ml-[1px] text-[11px] opacity-70">{t('item.scaleSub')}</sub>
                 </>
               }
               max={10}
@@ -260,9 +262,9 @@ export function ItemPanel() {
         )}
       </PanelSection>
 
-      <PanelSection title="Info">
+      <PanelSection title={t('sections.info')}>
         <div className="flex items-center justify-between px-2 py-1 text-muted-foreground text-sm">
-          <span>Dimensions</span>
+          <span>{t('labels.dimensions')}</span>
           {(() => {
             const [w, h, d] = getScaledDimensions(node)
             return (
@@ -274,29 +276,33 @@ export function ItemPanel() {
         </div>
       </PanelSection>
 
-      <PanelSection title="Collections">
+      <PanelSection title={t('sections.collections')}>
         <ActionGroup>
           <CollectionsPopover
             collectionIds={node.collectionIds}
             nodeId={selectedId as AnyNode['id']}
           >
-            <ActionButton label="Manage collections…" />
+            <ActionButton label={t('actions.manageCollections')} />
           </CollectionsPopover>
         </ActionGroup>
       </PanelSection>
 
-      <PanelSection title="Actions">
+      <PanelSection title={t('sections.actions')}>
         <ActionGroup>
-          <ActionButton icon={<Move className="h-3.5 w-3.5" />} label="Move" onClick={handleMove} />
+          <ActionButton
+            icon={<Move className="h-3.5 w-3.5" />}
+            label={t('actions.move')}
+            onClick={handleMove}
+          />
           <ActionButton
             icon={<Copy className="h-3.5 w-3.5" />}
-            label="Duplicate"
+            label={t('actions.duplicate')}
             onClick={handleDuplicate}
           />
           <ActionButton
             className="hover:bg-red-500/20"
             icon={<Trash2 className="h-3.5 w-3.5 text-red-400" />}
-            label="Delete"
+            label={t('actions.delete')}
             onClick={handleDelete}
           />
         </ActionGroup>

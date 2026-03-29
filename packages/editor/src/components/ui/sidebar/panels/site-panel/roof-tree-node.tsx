@@ -2,6 +2,7 @@ import { type AnyNodeId, type RoofNode, type RoofSegmentNode, useScene } from '@
 import { useViewer } from '@pascal-app/viewer'
 import { AnimatePresence } from 'motion/react'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useState } from 'react'
 import useEditor from '../../../../../store/use-editor'
 import { InlineRenameInput } from './inline-rename-input'
@@ -16,6 +17,7 @@ interface RoofTreeNodeProps {
 }
 
 export function RoofTreeNode({ node, depth, isLast }: RoofTreeNodeProps) {
+  const t = useTranslations('sitePanel')
   const [isEditing, setIsEditing] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const selectedIds = useViewer((state) => state.selection.selectedIds)
@@ -67,7 +69,7 @@ export function RoofTreeNode({ node, depth, isLast }: RoofTreeNodeProps) {
   }, [isDropTarget, expanded])
 
   const segmentCount = segments.length
-  const defaultName = `Roof (${segmentCount} segment${segmentCount !== 1 ? 's' : ''})`
+  const defaultName = t('roofDefault', { count: segmentCount })
 
   // Hide the dragged segment from every roof while dragging
   const visibleSegments = drag ? segments.filter((seg) => seg.id !== drag.nodeId) : segments

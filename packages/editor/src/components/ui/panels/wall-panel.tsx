@@ -2,12 +2,16 @@
 
 import { type AnyNode, type AnyNodeId, useScene, type WallNode } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
+import { useTranslations } from 'next-intl'
 import { useCallback } from 'react'
 import { PanelSection } from '../controls/panel-section'
 import { SliderControl } from '../controls/slider-control'
+import { quantizePlanPoint } from '../../tools/wall/wall-drafting'
 import { PanelWrapper } from './panel-wrapper'
 
 export function WallPanel() {
+  const t = useTranslations('propertyPanel')
+  const tStructure = useTranslations('actionMenu.structure')
   const selectedIds = useViewer((s) => s.selection.selectedIds)
   const setSelection = useViewer((s) => s.setSelection)
   const nodes = useScene((s) => s.nodes)
@@ -27,7 +31,7 @@ export function WallPanel() {
 
   // Função mágica para a Issue #191: Atualiza o comprimento via cálculo vetorial
   const handleUpdateLength = useCallback((newLength: number) => {
-    if (!node || newLength <= 0) return
+    if (!node || newLength < 0.001) return
 
     const dx = node.end[0] - node.start[0]
     const dz = node.end[1] - node.start[1]
@@ -40,10 +44,10 @@ export function WallPanel() {
     const dirZ = dz / currentLength
 
     // Define o novo ponto final baseado no novo comprimento
-    const newEnd: [number, number] = [
+    const newEnd = quantizePlanPoint([
       node.start[0] + dirX * newLength,
-      node.start[1] + dirZ * newLength
-    ]
+      node.start[1] + dirZ * newLength,
+    ])
 
     handleUpdate({ end: newEnd })
   }, [node, handleUpdate])
@@ -65,23 +69,23 @@ export function WallPanel() {
     <PanelWrapper
       icon="/icons/wall.png"
       onClose={handleClose}
-      title={node.name || 'Wall'}
+      title={node.name || tStructure('wall')}
       width={280}
     >
-      <PanelSection title="Dimensions">
+      <PanelSection title={t('sections.dimensions')}>
         {/* Adicionando o controle de Length solicitado na Issue #191 */}
         <SliderControl
-          label="Length"
+          label={t('labels.length')}
           max={20}
-          min={0.1}
+          min={0.001}
           onChange={handleUpdateLength}
-          precision={2}
-          step={0.01}
+          precision={3}
+          step={0.001}
           unit="m"
           value={length}
         />
         <SliderControl
-          label="Height"
+          label={t('labels.height')}
           max={6}
           min={0.1}
           onChange={(v) => handleUpdate({ height: Math.max(0.1, v) })}
@@ -91,7 +95,7 @@ export function WallPanel() {
           value={Math.round(height * 100) / 100}
         />
         <SliderControl
-          label="Thickness"
+          label={t('labels.thickness')}
           max={1}
           min={0.05}
           onChange={(v) => handleUpdate({ thickness: Math.max(0.05, v) })}

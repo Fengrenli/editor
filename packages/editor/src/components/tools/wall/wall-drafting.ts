@@ -2,9 +2,21 @@ import { useScene, type WallNode, WallNode as WallSchema } from '@pascal-app/cor
 import { useViewer } from '@pascal-app/viewer'
 import { sfxEmitter } from '../../../lib/sfx-bus'
 export type WallPlanPoint = [number, number]
-export const WALL_GRID_STEP = 0.5
-export const WALL_JOIN_SNAP_RADIUS = 0.35
-export const WALL_MIN_LENGTH = 0.5
+/** Plan (XZ) snap step in metres — matches core wall miter junction quantisation (1 mm). */
+export const WALL_GRID_STEP = 0.001
+/** Search radius for snapping draft points to existing wall ends / edges */
+export const WALL_JOIN_SNAP_RADIUS = 0.08
+export const WALL_MIN_LENGTH = 0.001
+
+const PLAN_QUANT = 1000
+
+/** Normalise coordinates so junction keys in {@link WallNode} stay consistent (stitching). */
+export function quantizePlanPoint(point: WallPlanPoint): WallPlanPoint {
+  return [
+    Math.round(point[0] * PLAN_QUANT) / PLAN_QUANT,
+    Math.round(point[1] * PLAN_QUANT) / PLAN_QUANT,
+  ]
+}
 function distanceSquared(a: WallPlanPoint, b: WallPlanPoint): number {
   const dx = a[0] - b[0]
   const dz = a[1] - b[1]
@@ -33,7 +45,7 @@ function projectPointOntoWall(point: WallPlanPoint, wall: WallNode): WallPlanPoi
   const dx = x2 - x1
   const dz = z2 - z1
   const lengthSquared = dx * dx + dz * dz
-  if (lengthSquared < 1e-9) {
+  if (lengthSquared < 1e-12) {
     return null
   }
   const t = ((point[0] - x1) * dx + (point[1] - z1) * dz) / lengthSquared
@@ -86,11 +98,11 @@ export function snapWallDraftPoint(args: {
 }): WallPlanPoint {
   const { point, walls, start, angleSnap = false, ignoreWallIds } = args
   const basePoint = start && angleSnap ? snapPointTo45Degrees(start, point) : snapPointToGrid(point)
-  return (
+  const snapped =
     findWallSnapTarget(basePoint, walls, {
       ignoreWallIds,
     }) ?? basePoint
-  )
+  return quantizePlanPoint(snapped)
 }
 export function isWallLongEnough(start: WallPlanPoint, end: WallPlanPoint): boolean {
   return distanceSquared(start, end) >= WALL_MIN_LENGTH * WALL_MIN_LENGTH
@@ -101,14 +113,16 @@ export function createWallOnCurrentLevel(
 ): WallNode | null {
   const currentLevelId = useViewer.getState().selection.levelId
   const { createNode, nodes } = useScene.getState()
-  if (!(currentLevelId && isWallLongEnough(start, end))) {
+  const qs = quantizePlanPoint(start)
+  const qe = quantizePlanPoint(end)
+  if (!(currentLevelId && isWallLongEnough(qs, qe))) {
     return null
   }
   const wallCount = Object.values(nodes).filter((node) => node.type === 'wall').length
   const wall = WallSchema.parse({
     name: `Wall ${wallCount + 1}`,
-    start,
-    end,
+    start: qs,
+    end: qe,
   })
   createNode(wall, currentLevelId)
   sfxEmitter.emit('sfx:structure-build')

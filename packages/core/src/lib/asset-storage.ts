@@ -1,4 +1,4 @@
-import { get, set } from 'idb-keyval'
+import { del, get, set } from 'idb-keyval'
 
 export const ASSET_PREFIX = 'asset_data:'
 
@@ -52,4 +52,24 @@ export async function loadAssetUrl(url: string): Promise<string | null> {
 
   // Legacy data URLs are returned as is
   return url
+}
+
+/** Remove a file saved via {@link saveAsset} and revoke any cached object URL. */
+export async function removeAssetByUrl(url: string): Promise<void> {
+  if (!url.startsWith('asset://')) {
+    return
+  }
+
+  const id = url.replace('asset://', '')
+  const cached = urlCache.get(id)
+  if (cached) {
+    URL.revokeObjectURL(cached)
+    urlCache.delete(id)
+  }
+
+  try {
+    await del(`${ASSET_PREFIX}${id}`)
+  } catch {
+    // ignore
+  }
 }

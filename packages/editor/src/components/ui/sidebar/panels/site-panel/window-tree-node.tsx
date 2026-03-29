@@ -3,6 +3,7 @@
 import type { WindowNode } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import useEditor from './../../../../../store/use-editor'
 import { InlineRenameInput } from './inline-rename-input'
@@ -16,6 +17,7 @@ interface WindowTreeNodeProps {
 }
 
 export function WindowTreeNode({ node, depth, isLast }: WindowTreeNodeProps) {
+  const tStructure = useTranslations('actionMenu.structure')
   const [isEditing, setIsEditing] = useState(false)
   const selectedIds = useViewer((state) => state.selection.selectedIds)
   const isSelected = selectedIds.includes(node.id)
@@ -23,7 +25,7 @@ export function WindowTreeNode({ node, depth, isLast }: WindowTreeNodeProps) {
   const setSelection = useViewer((state) => state.setSelection)
   const setHoveredId = useViewer((state) => state.setHoveredId)
 
-  const defaultName = 'Window'
+  const defaultName = tStructure('window')
 
   return (
     <TreeNodeWrapper

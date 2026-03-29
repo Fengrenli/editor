@@ -1,7 +1,9 @@
+'use client'
+
 import { emitter, useScene } from '@pascal-app/core'
 import { useViewer } from '@pascal-app/viewer'
 import { TreeView, VisualJson } from '@visual-json/react'
-import { Camera, Download, Save, Trash2, Upload } from 'lucide-react'
+import { Camera, Download, FolderPlus, Save, Trash2, Upload } from 'lucide-react'
 import {
   type KeyboardEvent,
   type SyntheticEvent,
@@ -10,6 +12,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from './../../../../../components/ui/primitives/button'
 import {
   Dialog,
@@ -19,6 +22,7 @@ import {
 } from './../../../../../components/ui/primitives/dialog'
 import { Switch } from './../../../../../components/ui/primitives/switch'
 import useEditor from './../../../../../store/use-editor'
+import type { LocalProjectEntry } from './../../../../../lib/local-projects'
 import { AudioSettingsDialog } from './audio-settings-dialog'
 import { KeyboardShortcutsDialog } from './keyboard-shortcuts-dialog'
 
@@ -168,13 +172,23 @@ export interface SettingsPanelProps {
     field: 'isPrivate' | 'showScansPublic' | 'showGuidesPublic',
     value: boolean,
   ) => Promise<void>
+  /** Browser / desktop: multiple local projects (see useLocalEditorSession) */
+  localProjects?: LocalProjectEntry[]
+  activeLocalProjectId?: string
+  onCreateLocalProject?: () => void
+  onSwitchLocalProject?: (projectId: string) => void
 }
 
 export function SettingsPanel({
   projectId,
   projectVisibility,
   onVisibilityChange,
+  localProjects,
+  activeLocalProjectId,
+  onCreateLocalProject,
+  onSwitchLocalProject,
 }: SettingsPanelProps = {}) {
+  const t = useTranslations('settingsPanel')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const nodes = useScene((state) => state.nodes)
   const rootNodeIds = useScene((state) => state.rootNodeIds)
@@ -200,7 +214,9 @@ export function SettingsPanel({
     }
   }, [])
 
-  const isLocalProject = false // Props-based; only show cloud sections when projectId provided
+  const showCloudProjectSettings = Boolean(
+    projectId && !(onCreateLocalProject || onSwitchLocalProject),
+  )
 
   const handleExport = async (format: 'glb' | 'stl' | 'obj' = 'glb') => {
     if (exportScene) {
@@ -267,14 +283,14 @@ export function SettingsPanel({
   return (
     <div className="flex flex-col gap-6 p-3">
       {/* Visibility Section (only for cloud projects) */}
-      {projectId && !isLocalProject && (
+      {showCloudProjectSettings && (
         <div className="space-y-3">
-          <label className="font-medium text-muted-foreground text-xs uppercase">Visibility</label>
+          <label className="font-medium text-muted-foreground text-xs uppercase">{t('sectionVisibility')}</label>
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-medium text-sm">Public</div>
+              <div className="font-medium text-sm">{t('public')}</div>
               <div className="text-muted-foreground text-xs">
-                {projectVisibility?.isPrivate ? 'Only you' : 'Anyone'} can view
+                {projectVisibility?.isPrivate ? t('canViewPrivate') : t('canViewPublic')}
               </div>
             </div>
             <Switch
@@ -284,8 +300,8 @@ export function SettingsPanel({
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-medium text-sm">Show 3D Scans</div>
-              <div className="text-muted-foreground text-xs">Visible to public viewers</div>
+              <div className="font-medium text-sm">{t('show3dScans')}</div>
+              <div className="text-muted-foreground text-xs">{t('visibleToPublicViewers')}</div>
             </div>
             <Switch
               checked={projectVisibility?.showScansPublic ?? true}
@@ -294,8 +310,8 @@ export function SettingsPanel({
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-medium text-sm">Show Floorplans</div>
-              <div className="text-muted-foreground text-xs">Visible to public viewers</div>
+              <div className="font-medium text-sm">{t('showFloorplans')}</div>
+              <div className="text-muted-foreground text-xs">{t('visibleToPublicViewers')}</div>
             </div>
             <Switch
               checked={projectVisibility?.showGuidesPublic ?? true}
@@ -304,8 +320,8 @@ export function SettingsPanel({
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-medium text-sm">Show Grid</div>
-              <div className="text-muted-foreground text-xs">Visible only in the editor</div>
+              <div className="font-medium text-sm">{t('showGrid')}</div>
+              <div className="text-muted-foreground text-xs">{t('gridEditorOnly')}</div>
             </div>
             <Switch
               checked={showGrid}
@@ -317,25 +333,25 @@ export function SettingsPanel({
 
       {/* Export Section */}
       <div className="space-y-2">
-        <label className="font-medium text-muted-foreground text-xs uppercase">Export</label>
+        <label className="font-medium text-muted-foreground text-xs uppercase">{t('sectionExport')}</label>
         <Button className="w-full justify-start gap-2" onClick={() => handleExport('glb')} variant="outline">
           <Download className="size-4" />
-          Export as GLB
+          {t('exportAsGlb')}
         </Button>
         <Button className="w-full justify-start gap-2" onClick={() => handleExport('stl')} variant="outline">
           <Download className="size-4" />
-          Export as STL
+          {t('exportAsStl')}
         </Button>
         <Button className="w-full justify-start gap-2" onClick={() => handleExport('obj')} variant="outline">
           <Download className="size-4" />
-          Export as OBJ
+          {t('exportAsObj')}
         </Button>
       </div>
 
       {/* Thumbnail Section (only for cloud projects) */}
-      {projectId && !isLocalProject && (
+      {showCloudProjectSettings && (
         <div className="space-y-2">
-          <label className="font-medium text-muted-foreground text-xs uppercase">Thumbnail</label>
+          <label className="font-medium text-muted-foreground text-xs uppercase">{t('sectionThumbnail')}</label>
           <Button
             className="w-full justify-start gap-2"
             disabled={isGeneratingThumbnail}
@@ -343,18 +359,48 @@ export function SettingsPanel({
             variant="outline"
           >
             <Camera className="size-4" />
-            {isGeneratingThumbnail ? 'Generating...' : 'Generate Thumbnail'}
+            {isGeneratingThumbnail ? t('thumbnailGenerating') : t('generateThumbnail')}
           </Button>
+        </div>
+      )}
+
+      {(onCreateLocalProject || onSwitchLocalProject) && (
+        <div className="space-y-2">
+          <label className="font-medium text-muted-foreground text-xs uppercase">{t('sectionProjects')}</label>
+          {localProjects && localProjects.length > 0 && onSwitchLocalProject ? (
+            <select
+              aria-label={t('activeProjectAria')}
+              className="h-9 w-full rounded-lg border border-border/60 bg-background/80 px-2.5 font-barlow text-foreground text-sm outline-none focus-visible:ring-1 focus-visible:ring-primary"
+              onChange={(e) => onSwitchLocalProject(e.target.value)}
+              value={activeLocalProjectId ?? localProjects[0]?.id ?? ''}
+            >
+              {localProjects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          ) : null}
+          {onCreateLocalProject ? (
+            <Button
+              className="w-full justify-start gap-2"
+              onClick={onCreateLocalProject}
+              variant="outline"
+            >
+              <FolderPlus className="size-4" />
+              {t('newProject')}
+            </Button>
+          ) : null}
         </div>
       )}
 
       {/* Save/Load Section */}
       <div className="space-y-2">
-        <label className="font-medium text-muted-foreground text-xs uppercase">Save & Load</label>
+        <label className="font-medium text-muted-foreground text-xs uppercase">{t('sectionSaveLoad')}</label>
 
         <Button className="w-full justify-start gap-2" onClick={handleSaveBuild} variant="outline">
           <Save className="size-4" />
-          Save Build
+          {t('saveBuild')}
         </Button>
 
         <Button
@@ -363,7 +409,7 @@ export function SettingsPanel({
           variant="outline"
         >
           <Upload className="size-4" />
-          Load Build
+          {t('loadBuild')}
         </Button>
 
         <input
@@ -377,27 +423,27 @@ export function SettingsPanel({
 
       {/* Audio Section */}
       <div className="space-y-2">
-        <label className="font-medium text-muted-foreground text-xs uppercase">Audio</label>
+        <label className="font-medium text-muted-foreground text-xs uppercase">{t('sectionAudio')}</label>
         <AudioSettingsDialog />
       </div>
 
       {/* Keyboard Section */}
       <div className="space-y-2">
-        <label className="font-medium text-muted-foreground text-xs uppercase">Keyboard</label>
+        <label className="font-medium text-muted-foreground text-xs uppercase">{t('sectionKeyboard')}</label>
         <KeyboardShortcutsDialog />
       </div>
 
       {/* Scene Graph */}
       <div className="space-y-1">
-        <label className="font-medium text-muted-foreground text-xs uppercase">Scene Graph</label>
+        <label className="font-medium text-muted-foreground text-xs uppercase">{t('sectionSceneGraph')}</label>
         <Dialog>
           <DialogTrigger asChild>
             <Button className="h-auto justify-start p-0 text-sm" variant="link">
-              Explore scene graph
+              {t('exploreSceneGraph')}
             </Button>
           </DialogTrigger>
           <DialogContent className="h-[80vh] max-w-[95vw] gap-0 overflow-hidden border-0 bg-[#1e1e1e] p-0 shadow-none sm:max-w-5xl">
-            <DialogTitle className="sr-only">Scene Graph</DialogTitle>
+            <DialogTitle className="sr-only">{t('sceneGraphDialogTitle')}</DialogTitle>
             <div
               className="flex h-full min-h-0 w-full min-w-0 *:h-full *:w-full *:overflow-y-auto"
               onContextMenuCapture={blockSceneGraphMutations}
@@ -415,7 +461,7 @@ export function SettingsPanel({
 
       {/* Danger Zone */}
       <div className="space-y-2">
-        <label className="font-medium text-destructive text-xs uppercase">Danger Zone</label>
+        <label className="font-medium text-destructive text-xs uppercase">{t('sectionDangerZone')}</label>
 
         <Button
           className="w-full justify-start gap-2"
@@ -423,7 +469,7 @@ export function SettingsPanel({
           variant="destructive"
         >
           <Trash2 className="size-4" />
-          Clear & Start New
+          {t('clearStartNew')}
         </Button>
       </div>
     </div>
